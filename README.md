@@ -43,8 +43,22 @@ uvicorn app.main:app --reload
 By default the data is stored in SQLite (`backend/hiremind.db`). To use PostgreSQL, run
 `docker compose up -d` and set `DATABASE_URL` as in [`backend/.env.example`](backend/.env.example).
 
-**Tests:** `cd backend && pytest -q`. On every push GitHub also runs them against PostgreSQL and runs a browser
-test of every screen; its screenshots are on the `e2e-screenshots` branch.
+**Tests:** `cd backend && pytest -q` (91 tests). On every push GitHub also runs a browser test of every screen and the
+non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are published to the `test-results` branch.
+
+## Non-functional results (latest run)
+
+| Test | Requirement | Target | Measured |
+|---|---|---|---|
+| PT-01 | NFR-01 | Dashboard p95 ≤ 2 s (10 users, 200 requests) | p95 0.6 s, 0 errors |
+| PT-02 | NFR-02 | CV analysis p95 ≤ 120 s over 50 CVs | p95 0.11 s, 50/50 parsed (classifier not yet included) |
+| PT-03 | NFR-03 | 100 simultaneous applications, none lost or duplicated | 100 stored, 100 unique |
+| ST-01 | NFR-04 | No access outside role and ownership | 22 protected endpoints × anonymous / wrong role / other HR refused; forged, expired and tampered tokens refused |
+| RT-01 | NFR-06 | Retries ≤ 2, invalid files rejected, data survives a restart | Passed |
+| RP-01 | NFR-08 | Same inputs and policy give the same score | Passed |
+| FT-01 | NFR-09 | 10 CV pairs differing in an irrelevant attribute | 0 differences in skills or score |
+| UT-01 | NFR-05 | 4 of 5 users finish a task in 5 minutes, SUS reported | To do with real participants |
+| AT-01 | NFR-07 | Skill extraction micro-F1 ≥ 0.85 on 30 annotated CVs | To do with real CVs |
 
 ## How a candidate is scored
 
@@ -96,6 +110,7 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 ```
 frontend/              screens (HTML, CSS, JavaScript): sign-in, 10 HR screens, candidate portal
 e2e/                   browser test that walks every screen and saves screenshots
+nfr/                   load, concurrency and restart tests
 backend/app/
   main.py              FastAPI application
   models.py            database tables (one per entity of the ERD)
