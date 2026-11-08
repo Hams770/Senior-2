@@ -100,3 +100,33 @@ class AuditOut(BaseModel):
     entity_id: int | None
     detail: dict
     created_at: datetime
+
+
+class SkillOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    skill: str
+    source_excerpt: str
+    section: str
+    origin: str
+    active: bool
+
+
+class ParsedOut(BaseModel):
+    application_id: int
+    parse_status: str
+    parse_error: str | None
+    sections: dict[str, str]
+    text: str | None
+    original_text: str | None
+    skills: list[SkillOut]
+
+
+class SkillIn(BaseModel):
+    skill: str = Field(min_length=1, max_length=100)
+    source_excerpt: str = ""
+
+
+class CorrectionIn(BaseModel):
+    text: str | None = None
+    skills: list[SkillIn] | None = None
+    reason: str = Field(min_length=3)

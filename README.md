@@ -18,7 +18,7 @@ decision, and the system never rejects a candidate automatically.**
 | CV upload (PDF/DOCX, ≤ 10 MB, private storage) | FR-05, FR-19 | **Done**, defects D4 and D5 fixed |
 | Scoring engine | FR-10, FR-14, FR-15, NFR-08 | **Done**, defects D1, D2 and D3 fixed |
 | Audit log | FR-22 | **Done** for jobs, policies, staff and applications |
-| CV parser (text, sections, skills with excerpts) | FR-06 – FR-08 | Next |
+| CV parser (text, sections, skills with excerpts, HR correction) | FR-06 – FR-08 | **Done** (PDF and DOCX; scanned CVs are reported, not read) |
 | Fit classifier service (BERT-Tiny from CS4085) | FR-09, NFR-10 | Next, waiting for the trained weights |
 | Assessments (MCQ, practical) | FR-11 – FR-13 | Planned |
 | Ranking, HR decisions, outcomes | FR-15, FR-16, FR-20 | Planned |
@@ -60,6 +60,9 @@ SQLite and PostgreSQL (see the **Actions** tab).
 | `GET /api/applications/mine` | candidate | Application status |
 | `GET /api/jobs/{id}/applications` | HR (owner) | Applications for a job |
 | `GET /api/applications/{id}/cv` | owner HR or the candidate | Download the CV (private) |
+| `GET /api/applications/{id}/parsed` | HR (owner) | Extracted text, sections and skills with their source sentence |
+| `PATCH /api/applications/{id}/parsed` | HR (owner) | Correct text or skills with a reason; the parser output is kept |
+| `POST /api/applications/{id}/parse` | HR (owner) | Run the parser again |
 | `POST /api/scoring/preview` | HR | Score for given components and weights |
 | `GET /api/audit` | admin | Audit log |
 
@@ -71,10 +74,11 @@ backend/app/
   main.py              FastAPI application
   models.py            database tables (one per entity of the ERD)
   security.py          password hashing, tokens, role checks
+  parser.py, skills.py CV parser and skill vocabulary
   scoring.py           scoring engine (D1-D3 fixed)
   audit.py             audit log
   routers/             auth, jobs, applications, admin endpoints
-backend/tests/         automated tests (TC-01 to TC-05, D1-D5, ST-01, NFR-08, FR-22)
+backend/tests/         automated tests (TC-01 to TC-08, D1-D5, ST-01, NFR-08, FR-22)
 docker-compose.yml     local PostgreSQL
 ```
 
