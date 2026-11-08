@@ -164,8 +164,15 @@ class Feedback(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
     draft: Mapped[str] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(20), default="template")  # template | llm
+    model: Mapped[str] = mapped_column(String(100), default="")
+    summary: Mapped[dict] = mapped_column(JSON, default=dict)  # the anonymised input that produced the draft
     approved_text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), default="draft")  # draft | approved | released
+    status: Mapped[str] = mapped_column(String(20), default="draft")  # draft | approved | released | discarded
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    approved_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AuditLog(Base):
