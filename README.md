@@ -20,7 +20,7 @@ decision, and the system never rejects a candidate automatically.**
 | Audit log | FR-22 | **Done** for jobs, policies, staff and applications |
 | CV parser (text, sections, skills with excerpts, HR correction) | FR-06 – FR-08 | **Done** (PDF and DOCX; scanned CVs are reported, not read) |
 | Fit classifier service (BERT-Tiny from CS4085) | FR-09, NFR-10 | Next, waiting for the trained weights |
-| Assessments (MCQ, practical) | FR-11 – FR-13 | Planned |
+| Skill assessments (MCQ graded by key, practical graded by HR rubric, time limit) | FR-11 – FR-13 | **Done** |
 | Ranking, HR decisions, outcomes | FR-15, FR-16, FR-20 | Planned |
 | Feedback drafts with HR approval | FR-17, FR-18 | Planned |
 | Screens connected to the API, analytics | FR-21 | Planned |
@@ -63,6 +63,11 @@ SQLite and PostgreSQL (see the **Actions** tab).
 | `GET /api/applications/{id}/parsed` | HR (owner) | Extracted text, sections and skills with their source sentence |
 | `PATCH /api/applications/{id}/parsed` | HR (owner) | Correct text or skills with a reason; the parser output is kept |
 | `POST /api/applications/{id}/parse` | HR (owner) | Run the parser again |
+| `POST /api/jobs/{id}/assessments` | HR (owner) | Create an MCQ or practical assessment for a required skill |
+| `POST /api/applications/{id}/assessments` | HR (owner) | Assign assessments to an applicant |
+| `GET /api/applications/{id}/assessments` | HR (owner) or the candidate | Attempts and results (candidates never see the answer key) |
+| `POST /api/attempts/{id}/start`, `/submit` | candidate | Timed attempt; late attempts are recorded as *not assessed* |
+| `POST /api/attempts/{id}/grade` | HR (owner) | Grade a practical answer with its rubric |
 | `POST /api/scoring/preview` | HR | Score for given components and weights |
 | `GET /api/audit` | admin | Audit log |
 
@@ -77,8 +82,8 @@ backend/app/
   parser.py, skills.py CV parser and skill vocabulary
   scoring.py           scoring engine (D1-D3 fixed)
   audit.py             audit log
-  routers/             auth, jobs, applications, admin endpoints
-backend/tests/         automated tests (TC-01 to TC-08, D1-D5, ST-01, NFR-08, FR-22)
+  routers/             auth, jobs, applications, assessments, admin endpoints
+backend/tests/         automated tests (TC-01 to TC-08, TC-11 to TC-13, D1-D5, ST-01, NFR-08, FR-22)
 docker-compose.yml     local PostgreSQL
 ```
 
