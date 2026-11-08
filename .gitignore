@@ -6,3 +6,4 @@ __pycache__/
 backend/uploads/
 .env
 .DS_Store
+e2e/screenshots/

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HireMind — My applications</title>
+<link rel="stylesheet" href="css/design-system.css">
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+startPage('My applications', '', ['candidate'], async body => {
+  body.innerHTML = `<div class="grid gap-20" style="grid-template-columns:1fr 1fr">
+    <div><div class="section-title mb-8">Your applications</div><div id="mine"></div></div>
+    <div><div class="section-title mb-8">Open jobs</div><div id="jobs"></div></div></div>`;
+  await load();
+});
+const STATUS_TEXT = { submitted: 'Received — HR is reviewing your CV', assessment: 'Skill assessment assigned', decided: 'HR has made a decision',
+  hired: 'Hired', not_hired: 'Not selected', withdrawn: 'Withdrawn' };
+let TIMER;
+async function load() {
+  const [mine, jobs] = await Promise.all([api('/api/me/applications'), api('/api/jobs')]);
+  const applied = new Set(mine.map(m => m.job_id));
+  document.getElementById('mine').innerHTML = mine.length ? mine.map(m => `<div class="card mb-16"><div class="card-body">
+      <div style="display:flex;justify-content:space-between;gap:8px"><strong>${esc(m.job_title)}</strong>${statusBadge(m.status)}</div>
+      <div class="hm-note" style="margin:4px 0 10px">${STATUS_TEXT[m.status] || esc(m.status)} · applied ${fmtDate(m.applied_at)}</div>
+      <div class="hm-row-actions">${m.assessments_to_do ? `<button class="btn btn-primary btn-sm" onclick="tests(${m.application_id})">Take assessment (${m.assessments_to_do})</button>` : ''}
+      ${m.feedback_available ? `<button class="btn btn-ghost btn-sm" onclick="feedback(${m.application_id})">Read feedback</button>` : ''}</div></div></div>`).join('')
+    : '<div class="card"><div class="hm-empty">You have not applied yet. Choose a job and upload your CV.</div></div>';
+  document.getElementById('jobs').innerHTML = jobs.length ? jobs.map(j => `<div class="card mb-16"><div class="card-body">
+      <strong>${esc(j.title)}</strong><div class="hm-note">${esc(j.level || '')}${j.deadline ? ' · apply by ' + fmtDate(j.deadline) : ''}</div>
+      <p style="font-size:13px;margin:8px 0">${esc(j.description)}</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${j.required_skills.map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div>
+      ${applied.has(j.id) ? '<span class="hm-note">Applied</span>' : `<button class="btn btn-primary btn-sm" onclick="applyTo(${j.id}, '${esc(j.title).replace(/'/g, '&#39;')}')">Apply</button>`}
+    </div></div>`).join('') : '<div class="card"><div class="hm-empty">No open jobs right now.</div></div>';
+}
+function applyTo(id, title) {
+  modal(`<div class="section-title mb-8">Apply: ${title}</div>
+    <p class="hm-note mb-16">Upload one CV as PDF or DOCX, up to 10 MB. Text-based files work best; scanned images may need HR to read them by hand.</p>
+    <div class="form-group"><input class="form-input" type="file" id="cv" accept=".pdf,.docx"></div>
+    <p class="hm-note mb-16">Your CV is stored privately and seen only by the HR team for this job. AI tools help HR read it, but a person makes every decision.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="send(${id})">Submit application</button></div>`);
+}
+async function send(id) {
+  const f = document.getElementById('cv').files[0];
+  if (!f) return showToast('Choose your CV file first', 'warning');
+  const form = new FormData(); form.append('cv', f);
+  await act(() => api(`/api/jobs/${id}/applications`, { method: 'POST', form }), 'Application submitted');
+  closeModal(); load();
+}
+async function tests(appId) {
+  const attempts = (await api(`/api/applications/${appId}/assessments`)).filter(a => ['assigned', 'in_progress'].includes(a.status));
+  const a = attempts[0];
+  if (!a) { load(); return; }
+  if (a.status === 'assigned') {
+    modal(`<div class="section-title mb-8">${esc(a.assessment.title)}</div>
+      <p class="hm-note mb-16">You have ${a.assessment.time_limit_min} minutes once you start. Submit before the time runs out; a late attempt is recorded as not assessed.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Later</button>
+      <button class="btn btn-primary" onclick="start(${a.id}, ${appId})">Start now</button></div>`);
+  } else take(a, appId);
+}
+async function start(id, appId) {
+  const a = await act(() => api(`/api/attempts/${id}/start`, { method: 'POST' }));
+  take(a, appId);
+}
+function take(a, appId) {
+  const c = a.assessment.content;
+  modal(`<div style="display:flex;justify-content:space-between;align-items:center" class="mb-16"><div class="section-title">${esc(a.assessment.title)}</div><strong id="clock"></strong></div>
+    ${a.assessment.type === 'mcq' ? c.questions.map((q, i) => `<div class="form-group"><div style="font-weight:600;margin-bottom:6px">${i + 1}. ${esc(q.text)}</div>
+      ${q.options.map((o, j) => `<label style="display:flex;gap:8px;font-size:14px;margin:4px 0"><input type="radio" name="q${i}" value="${j}"> ${esc(o)}</label>`).join('')}</div>`).join('')
+    : `<p style="margin-bottom:10px">${esc(c.prompt)}</p><textarea class="form-textarea" id="resp" rows="8" placeholder="Write your answer"></textarea>`}
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick='submitAttempt(${a.id}, ${appId}, ${a.assessment.type === "mcq" ? c.questions.length : 0})'>Submit</button></div>`);
+  const end = new Date(a.expires_at).getTime();
+  clearInterval(TIMER);
+  TIMER = setInterval(() => {
+    const left = Math.max(0, Math.round((end - Date.now()) / 1000)), el = document.getElementById('clock');
+    if (el) el.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} left`;
+    if (!left) clearInterval(TIMER);
+  }, 1000);
+}
+async function submitAttempt(id, appId, n) {
+  const body = n ? { answers: [...Array(n).keys()].map(i => { const r = document.querySelector(`input[name=q${i}]:checked`); return r ? Number(r.value) : null; }) }
+                 : { response: document.getElementById('resp').value };
+  await act(() => api(`/api/attempts/${id}/submit`, { method: 'POST', body }), 'Submitted');
+  clearInterval(TIMER); closeModal(); load();
+}
+async function feedback(appId) {
+  const fb = await api(`/api/applications/${appId}/feedback`);
+  modal(`<div class="section-title mb-16">Feedback from HR</div>${fb.map(f => `<p style="line-height:1.7">${esc(f.text)}</p><div class="hm-note">${fmtDate(f.released_at)}</div>`).join('<div class="divider"></div>')}
+    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`);
+}
+</script>
+</body>
+</html>

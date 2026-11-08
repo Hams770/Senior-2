@@ -2,234 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SmartRecruit AI — Scoring Engine</title>
+<title>HireMind — Scoring TITLE Ranking</title>
 <link rel="stylesheet" href="css/design-system.css">
-<style>
-.weight-control { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-.weight-control:last-child { border-bottom:none; }
-.weight-name { font-size:13px; font-weight:600; min-width:140px; }
-.weight-slider { flex:1; appearance:none; height:4px; background:rgba(255,255,255,0.1); border-radius:999px; outline:none; cursor:pointer; }
-.weight-slider::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:50%; background:var(--teal); cursor:pointer; box-shadow:0 0 8px rgba(0,212,180,0.5); }
-.weight-val { font-family:var(--font-mono); font-size:12px; color:var(--teal); min-width:36px; text-align:right; }
-.candidate-score-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
-.candidate-score-row:last-child { border-bottom:none; }
-.explanation-box {
-  background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07);
-  border-radius:var(--radius-md); padding:12px 14px; margin-top:8px;
-  font-size:12px; color:var(--mist); line-height:1.6;
-}
-.score-breakdown-item { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.breakdown-label { font-size:12px; min-width:150px; }
-.breakdown-pts { font-family:var(--font-mono); font-size:12px; color:var(--teal); min-width:50px; text-align:right; }
-.comparison-bar { position:relative; height:28px; border-radius:var(--radius-sm); overflow:hidden; background:rgba(255,255,255,0.04); }
-.comparison-fill { height:100%; border-radius:var(--radius-sm); display:flex; align-items:center; padding-left:8px; font-size:11px; font-weight:600; transition:width 1s ease; }
-</style>
 </head>
 <body>
 <div id="app-root"></div>
-<script src="js/shell.js"></script>
 <script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
 <script>
-renderShell('Scoring Engine', '');
-
-const candidates = [
-  {n:'Sara Al-Rashid',role:'SWE',score:92,tech:93,exp:90,edu:92,soft:91,ver:95},
-  {n:'Ahmed Hassan',role:'DS',score:88,tech:91,exp:82,edu:94,soft:80,ver:88},
-  {n:'James Okafor',role:'DevOps',score:90,tech:95,exp:88,edu:85,soft:87,ver:92},
-  {n:'Priya Sharma',role:'AI Res.',score:86,tech:89,exp:83,edu:92,soft:80,ver:85},
-  {n:'Lena Müller',role:'ML Eng',score:85,tech:88,exp:87,edu:91,soft:78,ver:80},
-  {n:'Omar Khaled',role:'Backend',score:81,tech:84,exp:76,edu:82,soft:79,ver:0},
-  {n:'Yuki Tanaka',role:'FE Dev',score:79,tech:80,exp:78,edu:80,soft:77,ver:0},
-  {n:'Fatima Zahra',role:'PM',score:77,tech:60,exp:82,edu:80,soft:90,ver:0},
-];
-
-const weights = { tech:35, exp:25, edu:20, soft:10, ver:10 };
-
-function computeScore(c,w) {
-  const total = w.tech+w.exp+w.edu+w.soft+w.ver;
-  return Math.round((c.tech*w.tech + c.exp*w.exp + c.edu*w.edu + c.soft*w.soft + c.ver*w.ver)/total);
+startPage('Scoring & Ranking', '', ['hr', 'admin'], async body => {
+  body.innerHTML = `<div class="section-header mb-24"><div><div class="section-title">Weights and ranking</div>
+    <div class="section-subtitle">Saving new weights creates a new policy version; existing evaluations keep the version they used.</div></div>
+    <div id="picker" style="margin-left:auto"></div></div>
+    <div class="grid gap-20" style="grid-template-columns:340px 1fr"><div class="card" id="weights"></div><div class="card" id="ranking"></div></div>`;
+  await jobPicker('picker', id => { JOB = id; load(); });
+});
+let JOB;
+const NAMES = { tech: 'Technical skills match', exp: 'Experience', edu: 'Education', soft: 'Soft skills', ver: 'Skill assessments' };
+async function load() {
+  const [policies, rank] = await Promise.all([api(`/api/jobs/${JOB}/policies`), api(`/api/jobs/${JOB}/ranking`)]);
+  const p = policies[policies.length - 1];
+  document.getElementById('weights').innerHTML = `<div class="card-header"><span class="card-title">Policy v${p.version}</span><span class="hm-note">${fmtDate(p.created_at)}</span></div>
+    <div class="card-body">${Object.keys(NAMES).map(k => `<div class="form-group"><label class="form-label" style="display:flex;justify-content:space-between">${NAMES[k]}<strong id="v-${k}">${p.weights[k]}</strong></label>
+      <input type="range" min="0" max="60" value="${p.weights[k]}" id="w-${k}" oninput="sync()" style="width:100%"></div>`).join('')}
+      <div class="hm-note mb-16" id="w-total"></div>
+      <button class="btn btn-primary btn-sm" onclick="savePolicy()">Save as version ${p.version + 1}</button></div>`;
+  sync();
+  document.getElementById('ranking').innerHTML = `<div class="card-header"><span class="card-title">Ranking</span><span class="hm-note">equal scores share a rank</span></div>
+    ${rank.length ? `<table class="data-table"><thead><tr><th>Rank</th><th>Candidate</th><th>Score</th><th>Not assessed</th><th>Decision</th></tr></thead><tbody>
+    ${rank.map(r => `<tr><td><strong>${r.rank}</strong></td><td>${esc(r.candidate)}</td><td><strong>${fmtScore(r.score)}</strong> ${statusBadge(r.stage)}<div class="hm-note">policy v${r.policy_version}</div></td>
+      <td>${r.not_assessed.map(k => NAMES[k]).join(', ') || '—'}</td><td>${r.decision ? statusBadge(r.decision) : '—'}</td></tr>`).join('')}</tbody></table>`
+    : '<div class="hm-empty">No evaluated candidates yet. Evaluate them in Candidates.</div>'}`;
 }
-
-function colorForScore(s) {
-  if(s>=85) return 'var(--teal)';
-  if(s>=70) return 'var(--amber)';
-  return 'var(--rose)';
+function sync() {
+  let total = 0;
+  for (const k of Object.keys(NAMES)) { const v = Number(document.getElementById('w-' + k).value); total += v; document.getElementById('v-' + k).textContent = v; }
+  document.getElementById('w-total').textContent = total > 0 ? `Total ${total}. Weights are used as proportions, so they need not add up to 100.` : 'At least one weight must be above zero.';
 }
-
-const body = document.getElementById('page-body');
-body.innerHTML = `
-<div class="section-header animate-in">
-  <div>
-    <div class="section-title">Scoring Engine</div>
-    <div class="section-subtitle">Weighted multi-factor candidate evaluation system</div>
-  </div>
-  <button class="btn btn-primary" onclick="recalculate()">⟳ Recalculate All</button>
-</div>
-
-<div class="grid grid-3 gap-20">
-  <!-- Weight Config -->
-  <div class="card animate-in animate-in-delay-1">
-    <div class="card-header">
-      <span class="card-title">Score Weights</span>
-      <span class="badge badge-amber">Configurable</span>
-    </div>
-    <div class="card-body">
-      <div style="font-size:12px;color:var(--mist);margin-bottom:14px">Adjust weights to match your organization's hiring priorities. Weights auto-normalize to 100%.</div>
-      ${Object.entries({tech:'Technical Skills',exp:'Work Experience',edu:'Education Fit',soft:'Soft Skills',ver:'Verification Score'}).map(([k,label])=>`
-        <div class="weight-control">
-          <div class="weight-name">${label}</div>
-          <input type="range" class="weight-slider" id="w-${k}" min="5" max="60" value="${weights[k]}" oninput="updateWeight('${k}',this.value)">
-          <div class="weight-val" id="wv-${k}">${weights[k]}%</div>
-        </div>
-      `).join('')}
-      <div class="divider"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--mist)">Total weight:</span>
-        <span id="total-weight" style="font-family:var(--font-mono);font-size:14px;color:var(--teal);font-weight:700">100%</span>
-      </div>
-      <div class="divider"></div>
-      <div style="font-size:12px;font-weight:600;color:var(--mist);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Weight Distribution</div>
-      ${Object.entries({tech:'Technical',exp:'Experience',edu:'Education',soft:'Soft Skills',ver:'Verified'}).map(([k,label])=>`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:11px;min-width:80px">${label}</span>
-          <div class="progress-bar" style="flex:1">
-            <div class="progress-fill" id="wbar-${k}" data-width="${weights[k]}%" style="width:0"></div>
-          </div>
-          <span style="font-size:11px;color:var(--mist);min-width:28px;text-align:right" id="wpct-${k}">${weights[k]}%</span>
-        </div>
-      `).join('')}
-    </div>
-  </div>
-
-  <!-- Ranked Results -->
-  <div class="card animate-in animate-in-delay-2" style="grid-column:2/4">
-    <div class="card-header">
-      <span class="card-title">Candidate Rankings</span>
-      <div style="display:flex;gap:8px">
-        <span class="badge badge-teal" id="scored-badge">8 scored</span>
-        <button class="btn btn-secondary btn-sm" onclick="showDetails(0)">📊 Detailed View</button>
-      </div>
-    </div>
-    <div class="card-body" id="rankings-list"></div>
-  </div>
-</div>
-
-<!-- Detailed Breakdown (hidden initially) -->
-<div id="detail-section" style="display:none;margin-top:20px">
-  <div class="grid grid-2 gap-20 animate-in">
-    <div class="card" id="detail-card">
-      <div class="card-header"><span class="card-title">Detailed Score Breakdown</span></div>
-      <div class="card-body" id="detail-body"></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Score Comparison</span></div>
-      <div class="card-body" id="comparison-body"></div>
-    </div>
-  </div>
-</div>
-`;
-
-function renderRankings() {
-  const w = {
-    tech: parseInt(document.getElementById('w-tech').value),
-    exp: parseInt(document.getElementById('w-exp').value),
-    edu: parseInt(document.getElementById('w-edu').value),
-    soft: parseInt(document.getElementById('w-soft').value),
-    ver: parseInt(document.getElementById('w-ver').value),
-  };
-  const ranked = [...candidates].map(c=>({...c,computed:computeScore(c,w)})).sort((a,b)=>b.computed-a.computed);
-  document.getElementById('rankings-list').innerHTML = ranked.map((c,i)=>`
-    <div class="candidate-score-row" onclick="showDetails(${candidates.indexOf(candidates.find(x=>x.n===c.n))})" style="cursor:pointer">
-      <div style="font-family:var(--font-mono);font-size:13px;color:var(--mist);min-width:24px">#${i+1}</div>
-      <div class="avatar" style="width:36px;height:36px;font-size:12px">${c.n.split(' ').map(x=>x[0]).join('')}</div>
-      <div style="min-width:150px">
-        <div style="font-size:14px;font-weight:600">${c.n}</div>
-        <div style="font-size:11px;color:var(--mist)">${c.role}</div>
-      </div>
-      <div class="progress-bar" style="flex:1">
-        <div class="progress-fill" data-width="${c.computed}%" style="width:0;background:${colorForScore(c.computed)}"></div>
-      </div>
-      <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:${colorForScore(c.computed)};min-width:44px;text-align:right">${c.computed}</div>
-      ${c.ver>0?'<span class="badge badge-emerald" style="font-size:9px">✅ Verified</span>':'<span class="badge" style="font-size:9px;opacity:.4">Unverified</span>'}
-    </div>
-  `).join('');
-  animateBars();
+async function savePolicy() {
+  const weights = Object.fromEntries(Object.keys(NAMES).map(k => [k, Number(document.getElementById('w-' + k).value)]));
+  await act(() => api(`/api/jobs/${JOB}/policies`, { method: 'POST', body: { weights } }), 'New policy version saved');
+  load();
 }
-
-function showDetails(idx) {
-  const c = candidates[idx];
-  const w = {
-    tech: parseInt(document.getElementById('w-tech').value),
-    exp: parseInt(document.getElementById('w-exp').value),
-    edu: parseInt(document.getElementById('w-edu').value),
-    soft: parseInt(document.getElementById('w-soft').value),
-    ver: parseInt(document.getElementById('w-ver').value),
-  };
-  const total = Object.values(w).reduce((a,b)=>a+b,0);
-  const finalScore = computeScore(c,w);
-
-  document.getElementById('detail-section').style.display='block';
-  document.getElementById('detail-section').scrollIntoView({behavior:'smooth'});
-
-  document.getElementById('detail-body').innerHTML = `
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
-      <div class="avatar" style="width:52px;height:52px;font-size:18px">${c.n.split(' ').map(x=>x[0]).join('')}</div>
-      <div>
-        <div style="font-family:var(--font-display);font-size:18px;font-weight:700">${c.n}</div>
-        <div style="color:var(--mist);font-size:13px">${c.role}</div>
-      </div>
-      <div style="margin-left:auto;font-family:var(--font-display);font-size:42px;font-weight:800;color:${colorForScore(finalScore)}">${finalScore}</div>
-    </div>
-    <div style="font-size:12px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Factor Breakdown</div>
-    ${Object.entries({tech:['Technical Skills',c.tech],exp:['Experience',c.exp],edu:['Education',c.edu],soft:['Soft Skills',c.soft],ver:['Verification',c.ver]}).map(([k,[label,raw]])=>`
-      <div class="score-breakdown-item">
-        <div class="breakdown-label">${label} <span style="color:var(--mist)">(×${w[k]}%)</span></div>
-        <div class="progress-bar" style="flex:1"><div class="progress-fill" data-width="${raw}%" style="width:0"></div></div>
-        <div class="breakdown-pts">${raw}/100</div>
-        <div style="font-size:11px;color:var(--mist);min-width:40px;text-align:right">→ ${Math.round(raw*w[k]/total)}</div>
-      </div>
-    `).join('')}
-    <div class="divider"></div>
-    <div class="explanation-box">
-      🤖 <strong>AI Explanation:</strong> This candidate scored ${finalScore}/100. Their strongest dimension is Technical Skills (${c.tech}/100), which carries ${w.tech}% weight. 
-      ${c.ver>0?`Verification bonus confirmed at ${c.ver}/100.`:'No verification data available yet — consider sending a skill test.'}
-      ${finalScore>=85?'Recommended for immediate shortlisting.':finalScore>=70?'Consider for next interview round.':'May need additional assessment.'}
-    </div>
-  `;
-  document.getElementById('comparison-body').innerHTML = `
-    <div style="font-size:12px;color:var(--mist);margin-bottom:16px">Comparing ${c.n} against all candidates</div>
-    ${candidates.map(ca=>`
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span style="${ca.n===c.n?'color:var(--teal);font-weight:700':'color:var(--mist)'}">${ca.n.split(' ')[0]}</span>
-          <span style="font-family:var(--font-mono);font-size:11px">${computeScore(ca,w)}</span>
-        </div>
-        <div class="comparison-bar">
-          <div class="comparison-fill" style="width:${computeScore(ca,w)}%;background:${ca.n===c.n?'var(--teal)':'rgba(255,255,255,0.1)'}">${ca.n===c.n?'← Selected':''}</div>
-        </div>
-      </div>
-    `).join('')}
-  `;
-  animateBars();
-}
-
-function updateWeight(key, val) {
-  document.getElementById(`wv-${key}`).textContent = val+'%';
-  const total = ['tech','exp','edu','soft','ver'].reduce((s,k)=>s+parseInt(document.getElementById(`w-${k}`).value),0);
-  document.getElementById('total-weight').textContent = total+'%';
-  document.getElementById('total-weight').style.color = Math.abs(total-100)<5?'var(--teal)':'var(--rose)';
-  document.getElementById(`wbar-${key}`).dataset.width = val+'%';
-  document.getElementById(`wpct-${key}`).textContent = val+'%';
-  animateBars();
-  renderRankings();
-}
-
-function recalculate() {
-  renderRankings();
-  showToast('Scores recalculated with new weights!', 'success');
-}
-
-renderRankings();
 </script>
 </body>
 </html>
