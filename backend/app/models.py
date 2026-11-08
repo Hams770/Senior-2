@@ -68,8 +68,12 @@ class CVDocument(Base):
     file_path: Mapped[str] = mapped_column(String(500))
     sha256: Mapped[str] = mapped_column(String(64))
     size_bytes: Mapped[int] = mapped_column(Integer)
-    parse_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | parsed | failed
-    extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parse_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | parsed | failed | corrected
+    parse_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)  # parser output, never overwritten
+    sections: Mapped[dict] = mapped_column(JSON, default=dict)
+    corrected_text: Mapped[str | None] = mapped_column(Text, nullable=True)  # FR-08 HR correction
+    skills: Mapped[list["ExtractedSkill"]] = relationship(order_by="ExtractedSkill.skill")
     application: Mapped[Application] = relationship(back_populates="cv")
 
 
@@ -79,6 +83,9 @@ class ExtractedSkill(Base):
     cv_id: Mapped[int] = mapped_column(ForeignKey("cv_documents.id"))
     skill: Mapped[str] = mapped_column(String(100))
     source_excerpt: Mapped[str] = mapped_column(Text)  # FR-07
+    section: Mapped[str] = mapped_column(String(30), default="")
+    origin: Mapped[str] = mapped_column(String(10), default="parser")  # parser | hr
+    active: Mapped[bool] = mapped_column(Boolean, default=True)  # parser rows are kept but deactivated on correction
 
 
 class FitPrediction(Base):
