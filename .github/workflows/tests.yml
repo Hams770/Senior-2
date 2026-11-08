@@ -1,0 +1,41 @@
+name: backend-tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  sqlite:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+      - name: Start the server and call it
+        run: |
+          python -m app.cli create-admin admin@hiremind.test 'AdminPass123'
+          uvicorn app.main:app --port 8000 & sleep 4
+          curl -sf http://127.0.0.1:8000/api/health
+          curl -sf -o /dev/null http://127.0.0.1:8000/index.html
+          curl -sf -X POST http://127.0.0.1:8000/api/auth/login -d 'username=admin@hiremind.test&password=AdminPass123' | grep access_token
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: hiremind, POSTGRES_PASSWORD: hiremind, POSTGRES_DB: hiremind }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    defaults: { run: { working-directory: backend } }
+    env:
+      DATABASE_URL: postgresql+psycopg2://hiremind:hiremind@localhost:5432/hiremind
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - name: Create all tables in PostgreSQL and run the API against it
+        run: |
+          python -m app.cli create-admin admin@hiremind.test 'AdminPass123'
+          python -c "from sqlalchemy import inspect; from app.db import engine; t=sorted(inspect(engine).get_table_names()); print(t); assert len(t)==13"
+          uvicorn app.main:app --port 8000 & sleep 4
+          curl -sf -X POST http://127.0.0.1:8000/api/auth/login -d 'username=admin@hiremind.test&password=AdminPass123' | grep access_token
