@@ -21,7 +21,7 @@ decision, and the system never rejects a candidate automatically.**
 | CV parser (text, sections, skills with excerpts, HR correction) | FR-06 – FR-08 | **Done** (PDF and DOCX; scanned CVs are reported, not read) |
 | Fit classifier service (BERT-Tiny from CS4085) | FR-09, NFR-10 | Next, waiting for the trained weights |
 | Skill assessments (MCQ graded by key, practical graded by HR rubric, time limit) | FR-11 – FR-13 | **Done** |
-| Ranking, HR decisions, outcomes | FR-15, FR-16, FR-20 | Planned |
+| Provisional and final scores, ranking with breakdown, HR decisions, hiring outcome | FR-10, FR-14 – FR-16, FR-20 | **Done** |
 | Feedback drafts with HR approval | FR-17, FR-18 | Planned |
 | Screens connected to the API, analytics | FR-21 | Planned |
 
@@ -46,6 +46,18 @@ By default the data is stored in SQLite (`backend/hiremind.db`). To use PostgreS
 **Tests:** `cd backend && pytest -q`. They also run automatically on GitHub for every push, against
 SQLite and PostgreSQL (see the **Actions** tab).
 
+## How a candidate is scored
+
+| Component | Evidence | Who provides it |
+|---|---|---|
+| `tech` | Share of the job's required skills found in the CV | CV parser (HR can correct) |
+| `exp`, `edu`, `soft` | Experience, education, soft skills, 0-100 | HR, from the CV evidence |
+| `ver` | Mean score of the assigned skill assessments | Assessments |
+
+The score is the weighted mean of the components that have evidence, using the job's latest policy.
+It is *provisional* while any weighted component is not assessed and *final* when all are present.
+The fit classifier (FR-09) will be shown beside the score as extra evidence once its weights are added.
+
 ## Main API endpoints
 
 | Method and path | Who | Purpose |
@@ -68,6 +80,11 @@ SQLite and PostgreSQL (see the **Actions** tab).
 | `GET /api/applications/{id}/assessments` | HR (owner) or the candidate | Attempts and results (candidates never see the answer key) |
 | `POST /api/attempts/{id}/start`, `/submit` | candidate | Timed attempt; late attempts are recorded as *not assessed* |
 | `POST /api/attempts/{id}/grade` | HR (owner) | Grade a practical answer with its rubric |
+| `PUT /api/applications/{id}/ratings` | HR (owner) | Rate experience, education and soft skills (0-100) from the CV evidence |
+| `POST /api/applications/{id}/evaluate` | HR (owner) | Provisional score, or final when all evidence exists; history kept |
+| `GET /api/jobs/{id}/ranking` | HR (owner) | Ranked candidates, ties share a rank, full breakdown |
+| `POST /api/applications/{id}/decision` | HR (owner) | Advance, hold or reject, with a reason (never automatic) |
+| `POST /api/applications/{id}/outcome` | HR (owner) | Final hiring outcome |
 | `POST /api/scoring/preview` | HR | Score for given components and weights |
 | `GET /api/audit` | admin | Audit log |
 
@@ -82,8 +99,8 @@ backend/app/
   parser.py, skills.py CV parser and skill vocabulary
   scoring.py           scoring engine (D1-D3 fixed)
   audit.py             audit log
-  routers/             auth, jobs, applications, assessments, admin endpoints
-backend/tests/         automated tests (TC-01 to TC-08, TC-11 to TC-13, D1-D5, ST-01, NFR-08, FR-22)
+  routers/             auth, jobs, applications, assessments, evaluations, admin endpoints
+backend/tests/         automated tests (TC-01 to TC-08, TC-10 to TC-16, TC-20, D1-D5, ST-01, NFR-08, FR-22)
 docker-compose.yml     local PostgreSQL
 ```
 

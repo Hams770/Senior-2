@@ -55,7 +55,10 @@ class Application(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id"))
     candidate_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    # submitted -> assessment -> decided -> hired | not_hired | withdrawn
     status: Mapped[str] = mapped_column(String(30), default="submitted")
+    hr_ratings: Mapped[dict] = mapped_column(JSON, default=dict)  # exp, edu, soft (0-100) rated by HR from CV evidence
+    final_outcome: Mapped[str | None] = mapped_column(String(30), nullable=True)  # FR-20
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     cv: Mapped["CVDocument"] = relationship(back_populates="application", uselist=False)
 
@@ -149,9 +152,11 @@ class Decision(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"), unique=True)
     decided_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    outcome: Mapped[str] = mapped_column(String(30))
+    outcome: Mapped[str] = mapped_column(String(30))  # advance | hold | reject
     reason: Mapped[str] = mapped_column(Text)
+    evaluation_id: Mapped[int | None] = mapped_column(ForeignKey("evaluations.id"), nullable=True)  # evidence seen
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Feedback(Base):
