@@ -40,27 +40,7 @@ jobs:
   postgres:
     runs-on: ubuntu-latest
     services:
-      e2e:
-    name: Browser test of every screen
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install -r backend/requirements.txt playwright==1.49.1 && python -m playwright install --with-deps chromium
-      - name: Start the server on an empty database
-        working-directory: backend
-        run: |
-          python -m app.cli create-admin admin@hiremind.test 'AdminPass123'
-          nohup uvicorn app.main:app --port 8000 > ../server.log 2>&1 &
-          sleep 4 && curl -sf http://127.0.0.1:8000/api/health
-      - run: python e2e/run_e2e.py
-      - if: always()
-        run: cat server.log | tail -40
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with: { name: screenshots, path: e2e/screenshots }
-  postgres:
+      postgres:
         image: postgres:16
         env: { POSTGRES_USER: hiremind, POSTGRES_PASSWORD: hiremind, POSTGRES_DB: hiremind }
         ports: ["5432:5432"]
