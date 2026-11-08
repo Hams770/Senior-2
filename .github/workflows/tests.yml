@@ -20,6 +20,7 @@ jobs:
   e2e:
     name: Browser test of every screen
     runs-on: ubuntu-latest
+    permissions: { contents: write }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,9 +35,13 @@ jobs:
       - run: python e2e/run_e2e.py
       - if: always()
         run: cat server.log | tail -40
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with: { name: screenshots, path: e2e/screenshots }
+      - name: Publish screenshots to the e2e-screenshots branch
+        if: always() && github.event_name == 'push'
+        run: |
+          cd e2e/screenshots && git init -q && git checkout -q -b e2e-screenshots
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" e2e-screenshots
   postgres:
     runs-on: ubuntu-latest
     services:

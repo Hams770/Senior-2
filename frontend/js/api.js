@@ -65,7 +65,7 @@ async function jobPicker(containerId, onChange) {
   const el = document.getElementById(containerId);
   if (!jobs.length) { el.innerHTML = '<span style="color:var(--mist);font-size:13px">No jobs yet — create one in Job Postings.</span>'; return null; }
   let saved; try { saved = Number(localStorage.getItem('hm_job')); } catch {}
-  const current = jobs.find(j => j.id === saved) ? saved : jobs[0].id;
+  const current = jobs.find(j => j.id === saved) ? saved : (jobs.find(j => j.status === 'published') || jobs[0]).id;
   el.innerHTML = `<select class="form-select" style="min-width:260px">${jobs.map(j =>
     `<option value="${j.id}" ${j.id === current ? 'selected' : ''}>${esc(j.title)} (${esc(j.status)})</option>`).join('')}</select>`;
   el.querySelector('select').onchange = e => { try { localStorage.setItem('hm_job', e.target.value); } catch {} onChange(Number(e.target.value)); };

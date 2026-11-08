@@ -99,7 +99,7 @@ def ui_login(page, email, pw):
 
 
 def main():
-    seed()
+    jid = seed()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1366, "height": 860})
@@ -108,6 +108,7 @@ def main():
         shot(page, "00_login")
         ui_login(page, "noura@hiremind.test", "HrPass1234")
         assert page.url.endswith("index.html"), page.url
+        page.evaluate(f"localStorage.setItem('hm_job', '{jid}')")  # the job with applicants
         for name in ["index", "jobs", "candidates", "screening", "scoring", "verification", "feedback", "analytics", "learning", "settings"]:
             page.goto(f"{BASE}/{name}.html")
             shot(page, f"hr_{name}")
