@@ -4,6 +4,20 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
+
+def _load_env_file(path: Path) -> None:
+    """Read KEY=value lines from backend/.env (never committed); real environment variables win."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_env_file(BASE_DIR / ".env")
+
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'hiremind.db'}")
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
 TOKEN_MINUTES = int(os.getenv("TOKEN_MINUTES", "120"))
