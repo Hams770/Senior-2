@@ -22,7 +22,7 @@ decision, and the system never rejects a candidate automatically.**
 | Fit classifier service (BERT-Tiny from CS4085) | FR-09, NFR-10 | Next, waiting for the trained weights |
 | Skill assessments (MCQ graded by key, practical graded by HR rubric, time limit) | FR-11 – FR-13 | **Done** |
 | Provisional and final scores, ranking with breakdown, HR decisions, hiring outcome | FR-10, FR-14 – FR-16, FR-20 | **Done** |
-| Feedback drafts with HR approval | FR-17, FR-18 | Planned |
+| Feedback drafts (anonymised; LLM if a key is set, otherwise a template) released only after HR approval | FR-17, FR-18 | **Done** |
 | Screens connected to the API, analytics | FR-21 | Planned |
 
 ## Run it
@@ -85,6 +85,9 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 | `GET /api/jobs/{id}/ranking` | HR (owner) | Ranked candidates, ties share a rank, full breakdown |
 | `POST /api/applications/{id}/decision` | HR (owner) | Advance, hold or reject, with a reason (never automatic) |
 | `POST /api/applications/{id}/outcome` | HR (owner) | Final hiring outcome |
+| `POST /api/applications/{id}/feedback` | HR (owner) | Draft feedback from an anonymised summary |
+| `POST /api/feedback/{id}/approve`, `/release` | HR (owner) | Approve (or edit) the draft, then release it |
+| `GET /api/applications/{id}/feedback` | HR (owner) or the candidate | Candidates see only released feedback |
 | `POST /api/scoring/preview` | HR | Score for given components and weights |
 | `GET /api/audit` | admin | Audit log |
 
@@ -99,8 +102,9 @@ backend/app/
   parser.py, skills.py CV parser and skill vocabulary
   scoring.py           scoring engine (D1-D3 fixed)
   audit.py             audit log
-  routers/             auth, jobs, applications, assessments, evaluations, admin endpoints
-backend/tests/         automated tests (TC-01 to TC-08, TC-10 to TC-16, TC-20, D1-D5, ST-01, NFR-08, FR-22)
+  feedback_writer.py   anonymised feedback drafts (LLM or template)
+  routers/             auth, jobs, applications, assessments, evaluations, feedback, admin endpoints
+backend/tests/         automated tests (TC-01 to TC-08, TC-10 to TC-18, TC-20, D1-D5, ST-01, NFR-08, FR-22)
 docker-compose.yml     local PostgreSQL
 ```
 
