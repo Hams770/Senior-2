@@ -15,7 +15,7 @@ startPage('CV Screening', '', ['hr', 'admin'], async body => {
   body.innerHTML = `<div class="section-header mb-24"><div><div class="section-title">Evidence from each CV</div>
     <div class="section-subtitle">Skills the parser found, with the sentence each one came from. Correct anything it got wrong.</div></div>
     <div id="picker" style="margin-left:auto"></div></div>
-    <div class="grid gap-20" style="grid-template-columns:280px 1fr"><div class="card" id="apps"></div><div id="detail"></div></div>`;
+    <div class="grid gap-20" style="grid-template-columns:280px 1fr"><div class="card" id="apps" style="align-self:start"></div><div id="detail"></div></div>`;
   const wanted = Number(new URLSearchParams(location.search).get('app')) || null;
   await jobPicker('picker', async id => { JOB = id; await loadApps(wanted); });
 });

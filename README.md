@@ -12,7 +12,7 @@ decision, and the system never rejects a candidate automatically.**
 
 | Part | Requirements | Status |
 |---|---|---|
-| Interface prototype (10 screens) | — | Done in Senior 1, sample data ([`frontend/`](frontend/)) |
+| Interface: 10 HR screens + candidate portal + sign-in, connected to the API, new visual identity | FR-19, FR-21 | **Done** ([`frontend/`](frontend/)) |
 | Login, roles, ownership checks | FR-01, FR-02, NFR-04 | **Done** (backend + tests) |
 | Jobs and versioned scoring policies | FR-03, FR-04 | **Done** |
 | CV upload (PDF/DOCX, ≤ 10 MB, private storage) | FR-05, FR-19 | **Done**, defects D4 and D5 fixed |
@@ -23,7 +23,7 @@ decision, and the system never rejects a candidate automatically.**
 | Skill assessments (MCQ graded by key, practical graded by HR rubric, time limit) | FR-11 – FR-13 | **Done** |
 | Provisional and final scores, ranking with breakdown, HR decisions, hiring outcome | FR-10, FR-14 – FR-16, FR-20 | **Done** |
 | Feedback drafts (anonymised; LLM if a key is set, otherwise a template) released only after HR approval | FR-17, FR-18 | **Done** |
-| Screens connected to the API, analytics | FR-21 | Planned |
+| Analytics computed only from stored records | FR-21 | **Done** |
 
 ## Run it
 
@@ -38,13 +38,13 @@ uvicorn app.main:app --reload
 ```
 
 - API documentation (try every endpoint): http://127.0.0.1:8000/docs
-- Interface prototype: http://127.0.0.1:8000/index.html
+- The platform: http://127.0.0.1:8000/login.html (sign in with the admin account, add an HR account in Settings, or create a candidate account on the sign-in page)
 
 By default the data is stored in SQLite (`backend/hiremind.db`). To use PostgreSQL, run
 `docker compose up -d` and set `DATABASE_URL` as in [`backend/.env.example`](backend/.env.example).
 
-**Tests:** `cd backend && pytest -q`. They also run automatically on GitHub for every push, against
-SQLite and PostgreSQL (see the **Actions** tab).
+**Tests:** `cd backend && pytest -q`. On every push GitHub also runs them against PostgreSQL and runs a browser
+test of every screen; its screenshots are on the `e2e-screenshots` branch.
 
 ## How a candidate is scored
 
@@ -94,7 +94,8 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 ## Structure
 
 ```
-frontend/              Senior 1 interface prototype (HTML, CSS, JavaScript)
+frontend/              screens (HTML, CSS, JavaScript): sign-in, 10 HR screens, candidate portal
+e2e/                   browser test that walks every screen and saves screenshots
 backend/app/
   main.py              FastAPI application
   models.py            database tables (one per entity of the ERD)
