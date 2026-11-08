@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Candidates</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
+.filter-chip {
+  padding:6px 14px; border-radius:var(--radius-full); font-size:12px; font-weight:600;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer; transition:all var(--transition); color:var(--mist);
+}
+.filter-chip.active, .filter-chip:hover { background:var(--teal-glow); border-color:rgba(0,212,180,0.3); color:var(--teal); }
+.candidate-row td { vertical-align:middle; }
+.candidate-name-cell { display:flex; align-items:center; gap:10px; }
+.score-pill {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:50%;
+  border: 2px solid;
+  font-family:var(--font-display); font-size:14px; font-weight:800;
+}
+.score-high { border-color:var(--teal); color:var(--teal); }
+.score-med { border-color:var(--amber); color:var(--amber); }
+.score-low { border-color:var(--rose); color:var(--rose); }
+.skill-tags { display:flex; gap:4px; flex-wrap:wrap; }
+.candidate-modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200;
+  display:none; align-items:center; justify-content:center; padding:20px;
+  backdrop-filter:blur(6px);
+}
+.candidate-modal-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
+.candidate-modal {
+  background:var(--ink-2); border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius-xl); width:100%; max-width:700px; max-height:90vh;
+  overflow-y:auto; box-shadow:var(--shadow-lg);
+  animation:fadeInUp 0.3s ease;
+}
+.modal-header { padding:24px 28px 20px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:14px; }
+.modal-body { padding:24px 28px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--mist); font-size:20px; cursor:pointer; padding:4px; }
+.modal-close:hover { color:var(--paper); }
+.skill-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.skill-name { font-size:13px; min-width:120px; }
+.skill-level { font-family:var(--font-mono); font-size:11px; color:var(--mist); min-width:30px; text-align:right; }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Candidates', '');
+
+const candidates = [
+  { id:1, name:'Sara Al-Rashid', role:'Software Engineer', exp:'4 yrs', education:'B.Sc CS', score:92, status:'Shortlisted', skills:['Python','React','TensorFlow','SQL'], verified:true, date:'2026-04-28' },
+  { id:2, name:'Ahmed Hassan', role:'Data Scientist', exp:'3 yrs', education:'M.Sc DS', score:88, status:'Verification', skills:['Python','ML','Spark','Tableau'], verified:true, date:'2026-04-27' },
+  { id:3, name:'Lena Müller', role:'ML Engineer', exp:'5 yrs', education:'Ph.D AI', score:85, status:'Shortlisted', skills:['PyTorch','CUDA','C++','MLOps'], verified:false, date:'2026-04-26' },
+  { id:4, name:'Omar Khaled', role:'Backend Developer', exp:'2 yrs', education:'B.Sc CS', score:81, status:'Screening', skills:['Node.js','Docker','MongoDB','REST'], verified:false, date:'2026-04-29' },
+  { id:5, name:'Yuki Tanaka', role:'Frontend Dev', exp:'3 yrs', education:'B.Sc IT', score:79, status:'Screening', skills:['React','TypeScript','CSS','Vue'], verified:false, date:'2026-04-29' },
+  { id:6, name:'Nora Al-Ghamdi', role:'Data Analyst', exp:'2 yrs', education:'B.Sc Stat', score:74, status:'Applied', skills:['Excel','Power BI','SQL','R'], verified:false, date:'2026-04-30' },
+  { id:7, name:'James Okafor', role:'DevOps Engineer', exp:'6 yrs', education:'B.Sc CS', score:90, status:'Shortlisted', skills:['Kubernetes','Terraform','AWS','CI/CD'], verified:true, date:'2026-04-25' },
+  { id:8, name:'Priya Sharma', role:'AI Researcher', exp:'3 yrs', education:'M.Sc AI', score:86, status:'Verification', skills:['NLP','BERT','Python','Research'], verified:true, date:'2026-04-26' },
+  { id:9, name:'Carlos Ruiz', role:'Software Engineer', exp:'1 yr', education:'B.Sc CS', score:61, status:'Rejected', skills:['Java','Spring','SQL'], verified:false, date:'2026-04-28' },
+  { id:10, name:'Fatima Zahra', role:'Product Manager', exp:'4 yrs', education:'MBA', score:77, status:'Applied', skills:['Agile','Jira','Roadmapping','User Research'], verified:false, date:'2026-04-30' },
+];
+
+function scorePillClass(s) { return s>=80?'score-high':s>=65?'score-med':'score-low'; }
+function statusBadge(s) {
+  const map = {Shortlisted:'badge-teal',Verification:'badge-amber',Screening:'badge-violet',Applied:'badge-sky',Rejected:'badge-rose'};
+  return `<span class="badge ${map[s]||'badge-sky'}">${s}</span>`;
+}
+
+function openModal(c) {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div class="avatar" style="width:52px;height:52px;font-size:18px">${c.name.split(' ').map(x=>x[0]).join('')}</div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:700">${c.name}</div>
+        <div style="color:var(--mist);font-size:13px">${c.role} · ${c.exp} experience · ${c.education}</div>
+        <div style="margin-top:8px;display:flex;gap:8px">${statusBadge(c.status)}${c.verified?'<span class="badge badge-emerald">✅ Verified</span>':''}</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid grid-2 gap-16 mb-20">
+        <div>
+          <div class="score-ring" data-score="${c.score}" style="margin-bottom:12px">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+              <circle class="ring-progress" cx="50" cy="50" r="40" fill="none" stroke="var(--teal)" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-number" style="font-size:22px">${c.score}</div>
+              <div class="score-label">Score</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--mist)">Applied: ${c.date}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Skills Assessment</div>
+          ${['Technical Skills','Communication','Problem Solving','Domain Knowledge'].map((s,i)=>{
+            const v=[88,72,84,78,91][i+Math.floor(Math.random()*2)];
+            return `<div class="skill-row">
+              <span class="skill-name">${s}</span>
+              <div class="progress-bar" style="flex:1"><div class="progress-fill" data-width="${v}%" style="width:0"></div></div>
+              <span class="skill-level">${v}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Extracted Skills</div>
+      <div class="skill-tags">${c.skills.map(sk=>`<span class="chip teal">${sk}</span>`).join('')}</div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="scoring.html" class="btn btn-secondary btn-sm">📊 Full Score Breakdown</a>
+        <a href="verification.html" class="btn btn-secondary btn-sm">✅ Send Verification Test</a>
+        <a href="feedback.html" class="btn btn-secondary btn-sm">💬 Generate Feedback</a>
+        <button class="btn btn-primary btn-sm">⭐ Shortlist</button>
+        <button class="btn btn-danger btn-sm">✗ Reject</button>
+      </div>
+    </div>
+  `;
+  animateBars(); animateRings();
+}
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">All Candidates</div>
+    <div class="section-subtitle">248 total · 24 new this week</div>
+  </div>
+  <a href="screening.html" class="btn btn-primary">+ Screen New CV</a>
+</div>
+
+<div class="filter-bar animate-in animate-in-delay-1">
+  <span style="font-size:12px;color:var(--mist);font-weight:600">Filter:</span>
+  <div class="filter-chip active" onclick="filterCandidates(null,this)">All (${candidates.length})</div>
+  <div class="filter-chip" onclick="filterCandidates('Shortlisted',this)">Shortlisted</div>
+  <div class="filter-chip" onclick="filterCandidates('Verification',this)">Verification</div>
+  <div class="filter-chip" onclick="filterCandidates('Screening',this)">Screening</div>
+  <div class="filter-chip" onclick="filterCandidates('Applied',this)">Applied</div>
+  <div class="filter-chip" onclick="filterCandidates('Rejected',this)">Rejected</div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <select class="form-select" style="width:auto;padding:7px 12px;font-size:12px">
+      <option>Sort: Score ↓</option>
+      <option>Sort: Date ↓</option>
+      <option>Sort: Name A-Z</option>
+    </select>
+  </div>
+</div>
+
+<div class="card animate-in animate-in-delay-2">
+  <div style="overflow-x:auto">
+    <table class="data-table" id="candidates-table">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Role Applied</th>
+          <th>Experience</th>
+          <th>Score</th>
+          <th>Skills</th>
+          <th>Status</th>
+          <th>Verified</th>
+          <th>Applied</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="candidates-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="modal-overlay" class="candidate-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="candidate-modal" id="modal-content"></div>
+</div>
+`;
+
+function renderTable(list) {
+  document.getElementById('candidates-tbody').innerHTML = list.map(c=>`
+    <tr class="candidate-row" style="cursor:pointer" onclick="openModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <td>
+        <div class="candidate-name-cell">
+          <div class="avatar" style="width:36px;height:36px;font-size:12px">${c.name.split(' ').map(x=>x[0]).join('')}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">${c.name}</div>
+            <div style="font-size:11px;color:var(--mist)">${c.education}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:13px">${c.role}</td>
+      <td style="font-size:13px;color:var(--mist)">${c.exp}</td>
+      <td><div class="score-pill ${scorePillClass(c.score)}">${c.score}</div></td>
+      <td><div class="skill-tags">${c.skills.slice(0,2).map(s=>`<span class="chip">${s}</span>`).join('')}${c.skills.length>2?`<span class="chip">+${c.skills.length-2}</span>`:''}</div></td>
+      <td>${statusBadge(c.status)}</td>
+      <td style="text-align:center">${c.verified?'<span style="color:var(--emerald)">✅</span>':'<span style="color:var(--mist)">—</span>'}</td>
+      <td style="font-size:12px;color:var(--mist);font-family:var(--font-mono)">${c.date}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm btn-icon" title="View" onclick="openModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">👁</button>
+          <a href="scoring.html" class="btn btn-secondary btn-sm btn-icon" title="Score">📊</a>
+          <a href="verification.html" class="btn btn-secondary btn-sm btn-icon" title="Verify">✅</a>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterCandidates(status, el) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTable(status ? candidates.filter(c=>c.status===status) : candidates);
+}
+
+renderTable(candidates);
+</script>
+</body>
+</html>

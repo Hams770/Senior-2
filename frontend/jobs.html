@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Job Postings</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.job-card {
+  background:var(--ink-2); border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--radius-lg); padding:22px;
+  transition:all var(--transition); cursor:pointer;
+}
+.job-card:hover { border-color:rgba(0,212,180,0.3); transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+.job-card-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:14px; }
+.job-icon { width:44px; height:44px; border-radius:var(--radius-md); display:grid; place-items:center; font-size:20px; flex-shrink:0; }
+.job-title { font-family:var(--font-display); font-size:17px; font-weight:700; }
+.job-dept { font-size:12px; color:var(--mist); margin-top:2px; }
+.job-meta { display:flex; gap:12px; font-size:12px; color:var(--mist); margin-bottom:12px; flex-wrap:wrap; }
+.job-meta span { display:flex; align-items:center; gap:4px; }
+.job-skills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.job-footer { display:flex; align-items:center; justify-content:space-between; }
+.applicant-count { font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--teal); }
+.modal-backdrop {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200;
+  display:none; align-items:center; justify-content:center; padding:20px;
+  backdrop-filter:blur(6px);
+}
+.modal-backdrop.open { display:flex; animation:fadeIn .2s ease; }
+.modal-box {
+  background:var(--ink-2); border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius-xl); width:100%; max-width:640px;
+  box-shadow:var(--shadow-lg); animation:fadeInUp .3s ease; max-height:90vh; overflow-y:auto;
+}
+.skill-weight-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Job Postings', '');
+
+const jobs = [
+  { id:1, title:'Software Engineer', dept:'Engineering', type:'Full-time', loc:'Jeddah', exp:'3-5 yrs', edu:"Bachelor's", count:16, status:'Open', color:'var(--teal)', bg:'rgba(0,212,180,0.1)', icon:'💻', skills:['Python','React','SQL','Docker'], deadline:'2026-05-15', desc:'Build and maintain scalable backend services and web applications.' },
+  { id:2, title:'Data Scientist', dept:'AI/ML Team', type:'Full-time', loc:'Remote', exp:'2-4 yrs', edu:"Master's preferred", count:8, status:'Urgent', color:'var(--amber)', bg:'rgba(255,179,71,0.1)', icon:'📊', skills:['Python','ML','Spark','Tableau'], deadline:'2026-05-05', desc:'Develop data models and ML pipelines to drive business insights.' },
+  { id:3, title:'ML Engineer', dept:'AI/ML Team', type:'Full-time', loc:'Riyadh', exp:'4-6 yrs', edu:"Master's / PhD", count:5, status:'Open', color:'var(--violet)', bg:'rgba(124,106,247,0.1)', icon:'🤖', skills:['PyTorch','CUDA','MLOps','Python'], deadline:'2026-05-20', desc:'Design and deploy production ML systems at scale.' },
+  { id:4, title:'Product Manager', dept:'Product', type:'Full-time', loc:'Jeddah', exp:'3+ yrs', edu:"Bachelor's", count:11, status:'Closing Soon', color:'var(--rose)', bg:'rgba(255,95,109,0.1)', icon:'📋', skills:['Agile','Jira','User Research','Roadmapping'], deadline:'2026-05-03', desc:'Own product vision, roadmap, and cross-functional coordination.' },
+  { id:5, title:'UI/UX Designer', dept:'Design', type:'Full-time', loc:'Jeddah', exp:'2-3 yrs', edu:"Bachelor's", count:4, status:'New', color:'var(--sky)', bg:'rgba(56,189,248,0.1)', icon:'🎨', skills:['Figma','Prototyping','Research','CSS'], deadline:'2026-05-25', desc:'Create intuitive, beautiful user experiences across our platform.' },
+  { id:6, title:'DevOps Engineer', dept:'Infrastructure', type:'Full-time', loc:'Remote', exp:'4+ yrs', edu:"Bachelor's", count:7, status:'Open', color:'var(--emerald)', bg:'rgba(34,197,94,0.1)', icon:'⚙️', skills:['Kubernetes','Terraform','AWS','CI/CD'], deadline:'2026-05-18', desc:'Build and maintain our cloud infrastructure and deployment pipelines.' },
+];
+
+const statusBadge = {Open:'badge-teal',Urgent:'badge-rose','Closing Soon':'badge-amber',New:'badge-sky',Closed:'badge-violet'};
+
+function openJob(j) {
+  document.getElementById('job-modal').classList.add('open');
+  document.getElementById('job-modal-content').innerHTML = `
+    <div style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="job-icon" style="background:${j.bg};font-size:26px;width:52px;height:52px">${j.icon}</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:700">${j.title}</div>
+          <div style="color:var(--mist);font-size:13px">${j.dept} · ${j.type} · ${j.loc}</div>
+          <div style="margin-top:8px;display:flex;gap:8px"><span class="badge ${statusBadge[j.status]||'badge-teal'}">${j.status}</span></div>
+        </div>
+        <button style="margin-left:auto;background:none;border:none;color:var(--mist);font-size:20px;cursor:pointer" onclick="document.getElementById('job-modal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <div style="padding:24px 28px">
+      <div style="font-size:14px;color:var(--mist);line-height:1.6;margin-bottom:20px">${j.desc}</div>
+      <div class="grid grid-2 gap-16 mb-20">
+        ${[['📅','Deadline',j.deadline],['🎓','Education',j.edu],['💼','Experience',j.exp],['👥','Applicants',j.count+' total']].map(([i,l,v])=>`
+          <div style="background:rgba(255,255,255,0.03);border-radius:var(--radius-md);padding:12px">
+            <div style="font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${i} ${l}</div>
+            <div style="font-size:14px;font-weight:600">${v}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Required Skills</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">${j.skills.map(s=>`<span class="chip teal">${s}</span>`).join('')}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Scoring Weights</div>
+      ${[['Technical Skills',35],['Experience',25],['Education',20],['Soft Skills',10],['Verification',10]].map(([l,w])=>`
+        <div class="skill-weight-row">
+          <span style="font-size:12px;min-width:130px">${l}</span>
+          <div class="progress-bar" style="flex:1"><div class="progress-fill" data-width="${w*2.5}%" style="width:0"></div></div>
+          <span style="font-size:12px;font-family:var(--font-mono);color:var(--teal);min-width:36px;text-align:right">${w}%</span>
+        </div>
+      `).join('')}
+      <div class="divider"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="candidates.html" class="btn btn-primary">👥 View Applicants (${j.count})</a>
+        <a href="screening.html" class="btn btn-secondary">🔍 Screen CVs</a>
+        <button class="btn btn-secondary" onclick="showToast('Job copied to clipboard','info')">📋 Copy Link</button>
+        <button class="btn btn-danger btn-sm" onclick="showToast('Job closed','warning')">✕ Close Job</button>
+      </div>
+    </div>
+  `;
+  animateBars();
+}
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">Job Postings</div>
+    <div class="section-subtitle">${jobs.length} active positions · 51 total applicants</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('new-job-modal').classList.add('open')">+ Post New Job</button>
+</div>
+
+<div class="grid grid-3 gap-20" id="jobs-grid">
+  ${jobs.map((j,i)=>`
+    <div class="job-card animate-in animate-in-delay-${Math.min(i+1,4)}" onclick="openJob(${JSON.stringify(j).replace(/"/g,'&quot;')})">
+      <div class="job-card-header">
+        <div class="job-icon" style="background:${j.bg}">${j.icon}</div>
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-dept">${j.dept}</div>
+        </div>
+        <span class="badge ${statusBadge[j.status]||'badge-teal'}" style="margin-left:auto">${j.status}</span>
+      </div>
+      <div class="job-meta">
+        <span>🏢 ${j.loc}</span>
+        <span>💼 ${j.exp}</span>
+        <span>⏰ ${j.type}</span>
+      </div>
+      <div class="job-skills">${j.skills.slice(0,3).map(s=>`<span class="chip">${s}</span>`).join('')}${j.skills.length>3?`<span class="chip">+${j.skills.length-3}</span>`:''}</div>
+      <div class="progress-bar mb-8"><div class="progress-fill" data-width="${Math.min(j.count*5,100)}%" style="width:0;background:${j.color}"></div></div>
+      <div class="job-footer">
+        <div>
+          <div class="applicant-count" style="color:${j.color}">${j.count}</div>
+          <div style="font-size:10px;color:var(--mist);text-transform:uppercase;letter-spacing:.5px">Applicants</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--mist)">Deadline</div>
+          <div style="font-size:12px;font-family:var(--font-mono)">${j.deadline}</div>
+        </div>
+      </div>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Job Detail Modal -->
+<div id="job-modal" class="modal-backdrop" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" id="job-modal-content"></div>
+</div>
+
+<!-- New Job Modal -->
+<div id="new-job-modal" class="modal-backdrop" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:580px">
+    <div style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:700">Post New Job</div>
+      <button style="background:none;border:none;color:var(--mist);font-size:20px;cursor:pointer" onclick="document.getElementById('new-job-modal').classList.remove('open')">✕</button>
+    </div>
+    <div style="padding:24px 28px">
+      <div class="form-group"><label class="form-label">Job Title</label><input class="form-input" placeholder="e.g. Senior Software Engineer"></div>
+      <div class="grid grid-2 gap-16">
+        <div class="form-group"><label class="form-label">Department</label><select class="form-select"><option>Engineering</option><option>AI/ML</option><option>Product</option><option>Design</option><option>Infrastructure</option></select></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" placeholder="Jeddah / Remote"></div>
+      </div>
+      <div class="grid grid-2 gap-16">
+        <div class="form-group"><label class="form-label">Experience Required</label><input class="form-input" placeholder="e.g. 3-5 years"></div>
+        <div class="form-group"><label class="form-label">Education Level</label><select class="form-select"><option>Bachelor's</option><option>Master's preferred</option><option>Master's / PhD</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Job Description</label><textarea class="form-textarea" placeholder="Describe the role, responsibilities, and what you're looking for…"></textarea></div>
+      <div class="form-group"><label class="form-label">Required Skills (comma-separated)</label><input class="form-input" placeholder="Python, React, SQL, Docker…"></div>
+      <div class="form-group"><label class="form-label">Application Deadline</label><input class="form-input" type="date"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="document.getElementById('new-job-modal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" onclick="document.getElementById('new-job-modal').classList.remove('open');showToast('New job posted successfully!','success')">🚀 Publish Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+animateBars();
+</script>
+</body>
+</html>

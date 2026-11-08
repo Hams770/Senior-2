@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Skill Verification</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.ver-card { background:var(--ink-3); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:18px; margin-bottom:12px; transition:border-color var(--transition); }
+.ver-card:hover { border-color:rgba(0,212,180,0.2); }
+.test-question { background:rgba(255,255,255,0.03); border-radius:var(--radius-md); padding:14px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.05); }
+.test-option { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--transition); font-size:13px; margin-top:6px; }
+.test-option:hover { background:rgba(255,255,255,0.05); }
+.test-option input { accent-color:var(--teal); }
+.result-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.result-row:last-child { border-bottom:none; }
+.ver-status-icon { font-size:22px; }
+.challenge-tab { padding:8px 16px; border-radius:var(--radius-full); font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.1); background:transparent; color:var(--mist); transition:all var(--transition); }
+.challenge-tab.active { background:var(--teal-glow); border-color:rgba(0,212,180,0.3); color:var(--teal); }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Skill Verification', '');
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">Skill Verification Layer</div>
+    <div class="section-subtitle">Automated practical challenges to validate candidate claims beyond the resume</div>
+  </div>
+  <button class="btn btn-primary" onclick="showToast('Test suite generated and sent!','success')">+ Generate New Test</button>
+</div>
+
+<div class="grid grid-3 gap-20 mb-24">
+  <div class="stat-card animate-in animate-in-delay-1" style="--accent:var(--teal)">
+    <span class="stat-icon">📋</span>
+    <div class="stat-label">Tests Sent</div>
+    <div class="stat-value" id="c1">0</div>
+    <div class="stat-delta">↑ 4 today</div>
+  </div>
+  <div class="stat-card animate-in animate-in-delay-2" style="--accent:var(--emerald)">
+    <span class="stat-icon">✅</span>
+    <div class="stat-label">Completed</div>
+    <div class="stat-value" id="c2">0</div>
+    <div class="stat-delta">77% completion rate</div>
+  </div>
+  <div class="stat-card animate-in animate-in-delay-3" style="--accent:var(--violet)">
+    <span class="stat-icon">⭐</span>
+    <div class="stat-label">Avg Verification Score</div>
+    <div class="stat-value" id="c3">0</div>
+    <div class="stat-delta">of 100 points</div>
+  </div>
+</div>
+
+<div class="grid grid-3 gap-20">
+  <!-- Test Builder -->
+  <div>
+    <div class="card animate-in animate-in-delay-1 mb-20">
+      <div class="card-header"><span class="card-title">Build Verification Test</span></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Select Candidate</label>
+          <select class="form-select">
+            <option>Omar Khaled</option>
+            <option>Yuki Tanaka</option>
+            <option>Fatima Zahra</option>
+            <option>Nora Al-Ghamdi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Skills to Verify</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            ${['Python','React','SQL','Docker','Node.js','ML','REST API'].map(s=>`
+              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:var(--radius-full);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:12px;transition:all .2s" onchange="this.style.background=this.querySelector('input').checked?'var(--teal-glow)':'rgba(255,255,255,0.04)';this.style.borderColor=this.querySelector('input').checked?'rgba(0,212,180,0.3)':'rgba(255,255,255,0.08)'">
+                <input type="checkbox" style="accent-color:var(--teal)"> ${s}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Challenge Type</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="challenge-tab active" onclick="setTab(this)">MCQ</button>
+            <button class="challenge-tab" onclick="setTab(this)">Code Task</button>
+            <button class="challenge-tab" onclick="setTab(this)">Case Study</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Difficulty Level</label>
+          <select class="form-select">
+            <option>Intermediate</option>
+            <option>Beginner</option>
+            <option>Advanced</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time Limit</label>
+          <select class="form-select">
+            <option>30 minutes</option>
+            <option>45 minutes</option>
+            <option>60 minutes</option>
+            <option>90 minutes</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="showToast('Test generated and sent via email!','success')">
+          🤖 Generate AI Test & Send
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sample Test Preview -->
+  <div class="card animate-in animate-in-delay-2">
+    <div class="card-header">
+      <span class="card-title">Test Preview</span>
+      <span class="badge badge-violet">AI Generated</span>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--mist);margin-bottom:14px">Python — Intermediate MCQ · 30 min · 5 questions</div>
+      <div class="test-question">
+        <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">Q1 of 5</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">What is the time complexity of a Python dict lookup?</div>
+        ${['O(1) — average case','O(n) — worst case','O(log n)','O(n²)'].map((opt,i)=>`
+          <div class="test-option"><input type="radio" name="q1"> ${String.fromCharCode(65+i)}. ${opt}</div>
+        `).join('')}
+      </div>
+      <div class="test-question">
+        <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">Q2 of 5</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">Which of the following creates a generator in Python?</div>
+        ${['Using yield inside a function','Using return inside a function','Using async/await','Calling list()'].map((opt,i)=>`
+          <div class="test-option"><input type="radio" name="q2"> ${String.fromCharCode(65+i)}. ${opt}</div>
+        `).join('')}
+      </div>
+      <div style="text-align:center;padding:8px 0;color:var(--mist);font-size:12px">… 3 more questions</div>
+      <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;margin-top:8px">
+        👁 Preview Full Test
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card animate-in animate-in-delay-3">
+    <div class="card-header"><span class="card-title">Verification Results</span></div>
+    <div class="card-body">
+      ${[
+        {n:'Sara Al-Rashid',skills:'Python, React',score:95,status:'Passed',icon:'✅',c:'badge-teal'},
+        {n:'Ahmed Hassan',skills:'Python, ML',score:88,status:'Passed',icon:'✅',c:'badge-teal'},
+        {n:'James Okafor',skills:'Docker, K8s',score:92,status:'Passed',icon:'✅',c:'badge-teal'},
+        {n:'Priya Sharma',skills:'NLP, BERT',score:85,status:'Passed',icon:'✅',c:'badge-teal'},
+        {n:'Omar Khaled',skills:'Node.js',score:0,status:'Pending',icon:'⏳',c:'badge-amber'},
+        {n:'Yuki Tanaka',skills:'React',score:0,status:'Sent',icon:'📤',c:'badge-sky'},
+        {n:'Nora Al-Ghamdi',skills:'SQL, Power BI',score:0,status:'Not Sent',icon:'⬜',c:'badge-rose'},
+      ].map(r=>`
+        <div class="result-row">
+          <span class="ver-status-icon">${r.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${r.n}</div>
+            <div style="font-size:11px;color:var(--mist)">${r.skills}</div>
+          </div>
+          ${r.score?`<span style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--teal)">${r.score}</span>`:''}
+          <span class="badge ${r.c}">${r.status}</span>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+</div>
+`;
+
+animateCount(document.getElementById('c1'), 19);
+animateCount(document.getElementById('c2'), 14);
+animateCount(document.getElementById('c3'), 87);
+
+function setTab(el) {
+  document.querySelectorAll('.challenge-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

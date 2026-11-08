@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Dashboard</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.sparkline-box { height: 48px; margin-top: 12px; }
+.pipeline-stage {
+  background: var(--ink-3);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: border-color var(--transition);
+}
+.pipeline-stage:hover { border-color: rgba(0,212,180,0.3); }
+.pipeline-num { font-family: var(--font-display); font-size: 28px; font-weight: 800; }
+.pipeline-bar { flex: 1; }
+.pipeline-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.activity-item:last-child { border-bottom: none; }
+.activity-time { font-family: var(--font-mono); font-size: 10px; color: var(--mist); min-width: 56px; padding-top: 2px; }
+.activity-icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+.activity-text { font-size: 13px; line-height: 1.5; }
+.activity-text strong { color: var(--teal); }
+.top-candidates .rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.top-candidates .rank-row:last-child { border-bottom: none; }
+.rank-num { font-family: var(--font-mono); font-size: 12px; color: var(--mist); width: 20px; }
+.rank-score { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--teal); min-width: 52px; }
+.rank-info { flex: 1; }
+.rank-name { font-size: 14px; font-weight: 600; }
+.rank-role { font-size: 11px; color: var(--mist); }
+.jobs-summary .job-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.jobs-summary .job-row:last-child { border-bottom: none; }
+.alert-banner {
+  background: linear-gradient(135deg, rgba(0,212,180,0.08), rgba(124,106,247,0.08));
+  border: 1px solid rgba(0,212,180,0.2);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 24px;
+}
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Dashboard', '');
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="alert-banner animate-in">
+  <span style="font-size:26px">🧠</span>
+  <div>
+    <div style="font-weight:700;font-size:15px">AI Processing Active</div>
+    <div style="font-size:13px;color:var(--mist);margin-top:2px">3 CVs are being analyzed · Verification tests sent to 7 candidates · Learning loop updated 2h ago</div>
+  </div>
+  <a href="screening.html" class="btn btn-primary btn-sm" style="margin-left:auto">View Queue →</a>
+</div>
+
+<div class="grid grid-4 mb-24 animate-in animate-in-delay-1">
+  <div class="stat-card" style="--accent:var(--teal)">
+    <span class="stat-icon">👥</span>
+    <div class="stat-label">Total Candidates</div>
+    <div class="stat-value" id="cnt-total">0</div>
+    <div class="stat-delta">↑ 12 new this week</div>
+    <div class="sparkline-box" id="spark-candidates"></div>
+  </div>
+  <div class="stat-card" style="--accent:var(--violet)">
+    <span class="stat-icon">✅</span>
+    <div class="stat-label">Screened Today</div>
+    <div class="stat-value" id="cnt-screened">0</div>
+    <div class="stat-delta">↑ 4 vs yesterday</div>
+    <div class="sparkline-box" id="spark-screened"></div>
+  </div>
+  <div class="stat-card" style="--accent:var(--amber)">
+    <span class="stat-icon">📊</span>
+    <div class="stat-label">Avg Match Score</div>
+    <div class="stat-value" id="cnt-score">0</div>
+    <div class="stat-delta">↑ 3.2 pts vs last cycle</div>
+    <div class="sparkline-box" id="spark-score"></div>
+  </div>
+  <div class="stat-card" style="--accent:var(--emerald)">
+    <span class="stat-icon">💼</span>
+    <div class="stat-label">Open Positions</div>
+    <div class="stat-value" id="cnt-jobs">0</div>
+    <div class="stat-delta">2 closing soon</div>
+    <div class="sparkline-box" id="spark-jobs"></div>
+  </div>
+</div>
+
+<div class="grid grid-3 gap-20 mb-24">
+  <!-- Pipeline -->
+  <div class="card animate-in animate-in-delay-2" style="grid-column:1/3">
+    <div class="card-header">
+      <span class="card-title">Recruitment Pipeline</span>
+      <a href="candidates.html" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="pipeline-stage">
+        <div class="pipeline-num" style="color:var(--sky)">48</div>
+        <div class="pipeline-bar">
+          <div class="pipeline-label">Applied</div>
+          <div class="progress-bar"><div class="progress-fill" data-width="100%" style="background:var(--sky);width:0"></div></div>
+        </div>
+        <span class="badge badge-sky">New</span>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num" style="color:var(--violet)">31</div>
+        <div class="pipeline-bar">
+          <div class="pipeline-label">CV Screened</div>
+          <div class="progress-bar"><div class="progress-fill" data-width="64%" style="background:var(--violet);width:0"></div></div>
+        </div>
+        <span class="badge badge-violet">Processing</span>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num" style="color:var(--amber)">19</div>
+        <div class="pipeline-bar">
+          <div class="pipeline-label">Skill Verification</div>
+          <div class="progress-bar"><div class="progress-fill" data-width="40%" style="background:var(--amber);width:0"></div></div>
+        </div>
+        <span class="badge badge-amber">Pending</span>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num" style="color:var(--teal)">12</div>
+        <div class="pipeline-bar">
+          <div class="pipeline-label">Shortlisted</div>
+          <div class="progress-bar"><div class="progress-fill" data-width="25%" style="width:0"></div></div>
+        </div>
+        <span class="badge badge-teal">Ready</span>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num" style="color:var(--emerald)">5</div>
+        <div class="pipeline-bar">
+          <div class="pipeline-label">Hired</div>
+          <div class="progress-bar"><div class="progress-fill" data-width="10%" style="background:var(--emerald);width:0"></div></div>
+        </div>
+        <span class="badge badge-emerald">Completed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity -->
+  <div class="card animate-in animate-in-delay-3">
+    <div class="card-header">
+      <span class="card-title">Live Activity</span>
+      <span class="badge badge-teal" style="animation:pulse 2s infinite">● Live</span>
+    </div>
+    <div class="card-body">
+      <div class="activity-item">
+        <div class="activity-time">Just now</div>
+        <div class="activity-icon" style="background:rgba(0,212,180,0.15)">🔍</div>
+        <div class="activity-text">CV from <strong>Sara Al-Rashid</strong> scored 87/100</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-time">2m ago</div>
+        <div class="activity-icon" style="background:rgba(124,106,247,0.15)">✅</div>
+        <div class="activity-text"><strong>Ahmed Hassan</strong> passed skill verification</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-time">8m ago</div>
+        <div class="activity-icon" style="background:rgba(255,179,71,0.15)">💬</div>
+        <div class="activity-text">AI feedback sent to <strong>Nora Al-Ghamdi</strong></div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-time">15m ago</div>
+        <div class="activity-icon" style="background:rgba(34,197,94,0.15)">🔄</div>
+        <div class="activity-text">Learning loop updated scoring weights</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-time">1h ago</div>
+        <div class="activity-icon" style="background:rgba(56,189,248,0.15)">💼</div>
+        <div class="activity-text">New job posted: <strong>ML Engineer</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3 gap-20">
+  <!-- Top Candidates -->
+  <div class="card top-candidates animate-in animate-in-delay-2">
+    <div class="card-header">
+      <span class="card-title">Top Ranked Candidates</span>
+      <a href="candidates.html" class="btn btn-ghost btn-sm">See all</a>
+    </div>
+    <div class="card-body">
+      ${[
+        {r:1,n:'Sara Al-Rashid',role:'Software Engineer',s:92,b:'badge-teal'},
+        {r:2,n:'Ahmed Hassan',role:'Data Scientist',s:88,b:'badge-violet'},
+        {r:3,n:'Lena Müller',role:'ML Engineer',s:85,b:'badge-sky'},
+        {r:4,n:'Omar Khaled',role:'Backend Dev',s:81,b:'badge-amber'},
+        {r:5,n:'Yuki Tanaka',role:'Frontend Dev',s:79,b:'badge-emerald'},
+      ].map(c=>`
+        <div class="rank-row">
+          <span class="rank-num">#${c.r}</span>
+          <div class="avatar" style="width:32px;height:32px;font-size:12px">${c.n.split(' ').map(x=>x[0]).join('')}</div>
+          <div class="rank-info">
+            <div class="rank-name">${c.n}</div>
+            <div class="rank-role">${c.role}</div>
+          </div>
+          <span class="rank-score">${c.s}</span>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Open Jobs -->
+  <div class="card jobs-summary animate-in animate-in-delay-3">
+    <div class="card-header">
+      <span class="card-title">Active Job Postings</span>
+      <a href="jobs.html" class="btn btn-ghost btn-sm">Manage</a>
+    </div>
+    <div class="card-body">
+      ${[
+        {title:'Software Engineer',dept:'Engineering',count:16,status:'badge-teal',st:'Open'},
+        {title:'Data Scientist',dept:'AI/ML Team',count:8,status:'badge-amber',st:'Urgent'},
+        {title:'ML Engineer',dept:'AI/ML Team',count:5,status:'badge-teal',st:'Open'},
+        {title:'Product Manager',dept:'Product',count:11,status:'badge-rose',st:'Closing Soon'},
+        {title:'UI/UX Designer',dept:'Design',count:4,status:'badge-violet',st:'New'},
+      ].map(j=>`
+        <div class="job-row">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);display:grid;place-items:center;font-size:14px;flex-shrink:0">💼</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${j.title}</div>
+            <div style="font-size:11px;color:var(--mist)">${j.dept} · ${j.count} applicants</div>
+          </div>
+          <span class="badge ${j.status}">${j.st}</span>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card animate-in animate-in-delay-4">
+    <div class="card-header"><span class="card-title">Quick Actions</span></div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+      <a href="screening.html" class="btn btn-primary" style="width:100%;justify-content:center">
+        🔍 Screen New CV
+      </a>
+      <a href="jobs.html" class="btn btn-secondary" style="width:100%;justify-content:center">
+        💼 Post a Job
+      </a>
+      <a href="verification.html" class="btn btn-secondary" style="width:100%;justify-content:center">
+        ✅ Send Skill Test
+      </a>
+      <a href="analytics.html" class="btn btn-secondary" style="width:100%;justify-content:center">
+        📈 View Analytics
+      </a>
+      <a href="feedback.html" class="btn btn-secondary" style="width:100%;justify-content:center">
+        💬 Generate Feedback
+      </a>
+      <a href="learning.html" class="btn btn-ghost" style="width:100%;justify-content:center">
+        🔄 Update Learning Loop
+      </a>
+    </div>
+  </div>
+</div>
+`;
+
+// Animate stat counts
+animateCount(document.getElementById('cnt-total'), 248);
+animateCount(document.getElementById('cnt-screened'), 17);
+animateCount(document.getElementById('cnt-score'), 74, 1200, '%');
+animateCount(document.getElementById('cnt-jobs'), 8);
+
+// Sparklines
+const sparkData = {
+  candidates: [180,192,205,198,215,224,248],
+  screened: [8,11,13,9,15,14,17],
+  score: [68,70,71,72,71,73,74],
+  jobs: [6,6,7,7,7,8,8]
+};
+setTimeout(() => {
+  renderSparkline(document.getElementById('spark-candidates'), sparkData.candidates);
+  renderSparkline(document.getElementById('spark-screened'), sparkData.screened, '#7c6af7');
+  renderSparkline(document.getElementById('spark-score'), sparkData.score, '#ffb347');
+  renderSparkline(document.getElementById('spark-jobs'), sparkData.jobs, '#22c55e');
+  animateBars();
+}, 300);
+
+setTimeout(() => showToast('3 new candidates submitted CVs in the last hour', 'info'), 2000);
+</script>
+</body>
+</html>

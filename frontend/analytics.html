@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Analytics</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.chart-container { position:relative; }
+.bar-chart { display:flex; align-items:flex-end; gap:8px; height:140px; padding-bottom:24px; position:relative; }
+.bar-chart::after { content:''; position:absolute; bottom:24px; left:0; right:0; height:1px; background:rgba(255,255,255,0.06); }
+.bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.bar { width:100%; background:linear-gradient(180deg,var(--teal),rgba(0,212,180,0.3)); border-radius:4px 4px 0 0; transition:height 1s cubic-bezier(.4,0,.2,1); position:relative; }
+.bar:hover { filter:brightness(1.3); }
+.bar-label { font-size:9px; color:var(--mist); text-align:center; }
+.bar-val { font-size:10px; color:var(--teal); font-family:var(--font-mono); }
+.donut-chart { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+.donut-chart .donut-label { position:absolute; text-align:center; }
+.metric-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.metric-row:last-child { border-bottom:none; }
+.metric-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.insight-card {
+  background:linear-gradient(135deg,rgba(0,212,180,0.06),rgba(124,106,247,0.06));
+  border:1px solid rgba(0,212,180,0.15);
+  border-radius:var(--radius-md);
+  padding:14px 16px;
+  font-size:13px;
+  line-height:1.6;
+  margin-bottom:10px;
+}
+.insight-card:last-child { margin-bottom:0; }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Analytics', '');
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">Recruitment Analytics</div>
+    <div class="section-subtitle">Data-driven insights for strategic hiring decisions</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <select class="form-select" style="width:auto;padding:8px 14px;font-size:12px">
+      <option>Last 30 days</option>
+      <option>Last 90 days</option>
+      <option>This year</option>
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="showToast('Report exported as PDF','success')">📥 Export</button>
+  </div>
+</div>
+
+<div class="grid grid-4 mb-24 animate-in animate-in-delay-1">
+  <div class="stat-card" style="--accent:var(--teal)">
+    <span class="stat-icon">⏱️</span>
+    <div class="stat-label">Avg Time-to-Hire</div>
+    <div class="stat-value" id="c1">0</div>
+    <div class="stat-delta" style="color:var(--teal)">↓ 6 days vs last cycle</div>
+  </div>
+  <div class="stat-card" style="--accent:var(--emerald)">
+    <span class="stat-icon">🎯</span>
+    <div class="stat-label">AI Accuracy</div>
+    <div class="stat-value" id="c2">0</div>
+    <div class="stat-delta">↑ 4% improvement</div>
+  </div>
+  <div class="stat-card" style="--accent:var(--violet)">
+    <span class="stat-icon">🔁</span>
+    <div class="stat-label">Offer Accept Rate</div>
+    <div class="stat-value" id="c3">0</div>
+    <div class="stat-delta">↑ 8% improvement</div>
+  </div>
+  <div class="stat-card" style="--accent:var(--amber)">
+    <span class="stat-icon">💸</span>
+    <div class="stat-label">Cost per Hire</div>
+    <div class="stat-value" id="c4">0</div>
+    <div class="stat-delta" style="color:var(--teal)">↓ 34% savings</div>
+  </div>
+</div>
+
+<div class="grid grid-3 gap-20 mb-20">
+  <!-- Applications over time -->
+  <div class="card animate-in animate-in-delay-2" style="grid-column:1/3">
+    <div class="card-header">
+      <span class="card-title">Applications Over Time</span>
+      <div style="display:flex;gap:12px;font-size:12px">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--teal);display:inline-block"></span>Applications</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--violet);display:inline-block"></span>Shortlisted</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="sparkline-main"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--mist);font-family:var(--font-mono)">
+        ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].slice(0,8).map(m=>`<span>${m}</span>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Score Distribution -->
+  <div class="card animate-in animate-in-delay-3">
+    <div class="card-header"><span class="card-title">Score Distribution</span></div>
+    <div class="card-body">
+      <div class="bar-chart" id="score-dist-chart">
+        ${[
+          {range:'0-40',count:3,color:'var(--rose)'},
+          {range:'41-55',count:7,color:'var(--rose)'},
+          {range:'56-65',count:12,color:'var(--amber)'},
+          {range:'66-75',count:18,color:'var(--amber)'},
+          {range:'76-85',count:27,color:'var(--teal)'},
+          {range:'86-100',count:21,color:'var(--teal)'},
+        ].map(b=>`
+          <div class="bar-col">
+            <span class="bar-val">${b.count}</span>
+            <div class="bar" style="height:0;background:linear-gradient(180deg,${b.color},rgba(0,0,0,0.1))" data-h="${b.count * 4}px"></div>
+            <span class="bar-label">${b.range}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--mist);text-align:center">Score Ranges</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3 gap-20 mb-20">
+  <!-- By Department -->
+  <div class="card animate-in animate-in-delay-2">
+    <div class="card-header"><span class="card-title">By Department</span></div>
+    <div class="card-body">
+      ${[
+        {dept:'Engineering',count:16,pct:31,color:'var(--teal)'},
+        {dept:'AI/ML Team',count:13,pct:26,color:'var(--violet)'},
+        {dept:'Product',count:11,pct:22,color:'var(--amber)'},
+        {dept:'Design',count:4,pct:8,color:'var(--sky)'},
+        {dept:'Infrastructure',count:7,pct:14,color:'var(--emerald)'},
+      ].map(d=>`
+        <div class="metric-row">
+          <div class="metric-dot" style="background:${d.color}"></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">${d.dept}</div>
+            <div class="progress-bar"><div class="progress-fill" data-width="${d.pct*2.5}%" style="width:0;background:${d.color}"></div></div>
+          </div>
+          <div style="text-align:right;font-size:12px;color:var(--mist)">${d.count}<br><span style="font-family:var(--font-mono);font-size:10px">${d.pct}%</span></div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Funnel -->
+  <div class="card animate-in animate-in-delay-3">
+    <div class="card-header"><span class="card-title">Hiring Funnel</span></div>
+    <div class="card-body">
+      ${[
+        {stage:'Applied',count:248,pct:100,color:'var(--sky)'},
+        {stage:'Screened',count:141,pct:57,color:'var(--violet)'},
+        {stage:'Verified',count:72,pct:29,color:'var(--amber)'},
+        {stage:'Shortlisted',count:34,pct:14,color:'var(--teal)'},
+        {stage:'Hired',count:12,pct:5,color:'var(--emerald)'},
+      ].map((f,i)=>`
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px">
+            <span style="font-weight:600">${f.stage}</span>
+            <span style="color:var(--mist)">${f.count} (${f.pct}%)</span>
+          </div>
+          <div class="progress-bar" style="height:8px"><div class="progress-fill" data-width="${f.pct}%" style="width:0;background:${f.color}"></div></div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- AI Insights -->
+  <div class="card animate-in animate-in-delay-4">
+    <div class="card-header">
+      <span class="card-title">AI Insights</span>
+      <span class="badge badge-violet">Auto-generated</span>
+    </div>
+    <div class="card-body">
+      <div class="insight-card">💡 <strong>Engineering candidates</strong> have 23% higher verification pass rates than average. Consider increasing technical screening weight.</div>
+      <div class="insight-card">📈 <strong>Time-to-hire</strong> dropped 41% after implementing automated skill verification. The verification layer is your highest ROI feature.</div>
+      <div class="insight-card">⚠️ <strong>Product Manager</strong> role is closing in 3 days with only 11 applicants. Consider extending the deadline or expanding the candidate search.</div>
+      <div class="insight-card">🎯 Candidates with <strong>verified skills</strong> have 3.2× higher offer acceptance rates than unverified candidates.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Bias Audit -->
+<div class="card animate-in animate-in-delay-3">
+  <div class="card-header">
+    <span class="card-title">Fairness & Bias Audit</span>
+    <span class="badge badge-emerald">✅ No Issues Detected</span>
+  </div>
+  <div class="card-body">
+    <div style="font-size:13px;color:var(--mist);margin-bottom:16px">
+      Regular audit of scoring outcomes to detect and mitigate demographic disparities. All scoring is based strictly on skills, experience, and verified competencies.
+    </div>
+    <div class="grid grid-4 gap-16">
+      ${[
+        {metric:'Gender Balance',val:'48% / 52%',status:'✅ Fair',c:'var(--emerald)'},
+        {metric:'Education Diversity',val:'12 institutions',status:'✅ Diverse',c:'var(--emerald)'},
+        {metric:'Score Variance',val:'σ = 8.2',status:'✅ Normal',c:'var(--emerald)'},
+        {metric:'Bias Score',val:'0.03',status:'✅ Minimal',c:'var(--emerald)'},
+      ].map(a=>`
+        <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);border-radius:var(--radius-md);padding:14px">
+          <div style="font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${a.metric}</div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px">${a.val}</div>
+          <div style="font-size:12px;color:${a.c}">${a.status}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+</div>
+`;
+
+animateCount(document.getElementById('c1'), 18, 1200, 'd');
+animateCount(document.getElementById('c2'), 87, 1200, '%');
+animateCount(document.getElementById('c3'), 73, 1200, '%');
+animateCount(document.getElementById('c4'), 2400, 1200, 'SR');
+
+// Animate bar chart
+setTimeout(() => {
+  document.querySelectorAll('.bar[data-h]').forEach(b => { b.style.height = b.dataset.h; });
+  animateBars();
+}, 300);
+
+// Sparkline
+setTimeout(() => {
+  renderSparkline(document.getElementById('sparkline-main'), [18,24,31,28,42,38,46,51], 'var(--teal)');
+}, 100);
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — AI Feedback</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.feedback-preview {
+  background:linear-gradient(135deg,rgba(0,212,180,0.04),rgba(124,106,247,0.04));
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  font-size:13px;
+  line-height:1.8;
+  color:var(--paper);
+  min-height:200px;
+}
+.feedback-section { margin-bottom:20px; }
+.feedback-section-title { font-family:var(--font-display); font-size:14px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.feedback-item { display:flex; gap:8px; margin-bottom:6px; font-size:13px; }
+.feedback-item::before { content:'•'; color:var(--teal); }
+.sent-feedback-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.sent-feedback-row:last-child { border-bottom:none; }
+.generating-box { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px; gap:16px; }
+.generating-spinner { width:48px; height:48px; border:3px solid rgba(0,212,180,0.2); border-top-color:var(--teal); border-radius:50%; animation:spin 1s linear infinite; }
+.typing-cursor { display:inline-block; width:2px; height:14px; background:var(--teal); margin-left:2px; animation:pulse 0.8s infinite; vertical-align:text-bottom; }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('AI Feedback', '');
+
+const feedbackData = {
+  accepted: `Dear Sara Al-Rashid,
+
+We are pleased to inform you that your application for the Software Engineer position has been reviewed and you have been shortlisted for the next stage.
+
+**Strengths Identified:**
+• Exceptional technical proficiency in Python and React (Score: 93/100)
+• Strong educational background with a B.Sc in Computer Science
+• Demonstrated experience in full-stack development and data engineering
+• Your TensorFlow skills are particularly relevant to our current AI initiatives
+
+**Areas for Growth:**
+• Consider deepening your cloud infrastructure knowledge (AWS/GCP)
+• Your system design exposure could be broadened with distributed systems experience
+
+**Next Steps:**
+You will be contacted within 3 business days to schedule a technical interview. We recommend reviewing system design concepts and preparing to discuss your past project experiences.
+
+Best regards,
+SmartRecruit AI — HR Team`,
+
+  rejected: `Dear Ahmed Hassan,
+
+Thank you for applying for the Senior ML Engineer position. After careful AI-assisted evaluation of your profile, we regret to inform you that we will not be proceeding with your application at this time.
+
+**Your Profile Strengths:**
+• Solid foundational ML knowledge (Score: 88/100)
+• Strong academic background with M.Sc in Data Science
+• Good Python and Spark proficiency
+
+**Gap Analysis:**
+• The role requires 5+ years of production ML deployment experience; your profile shows 3 years
+• PyTorch proficiency below the required threshold for this senior-level position
+• MLOps and infrastructure experience would strengthen future applications
+
+**Recommended Development:**
+• Consider roles at Intermediate level that match your current experience
+• Focus on production deployment and MLOps certification
+• We encourage you to apply again in 12 months
+
+We wish you success in your career journey.
+
+SmartRecruit AI — HR Team`
+};
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">AI Feedback Generator</div>
+    <div class="section-subtitle">Automated professional feedback reports powered by LLM reasoning</div>
+  </div>
+  <span class="badge badge-teal">● LLM Online</span>
+</div>
+
+<div class="grid grid-3 gap-20 mb-24">
+  <div class="stat-card animate-in" style="--accent:var(--teal)">
+    <span class="stat-icon">💬</span>
+    <div class="stat-label">Feedback Sent</div>
+    <div class="stat-value" id="c1">0</div>
+    <div class="stat-delta">This hiring cycle</div>
+  </div>
+  <div class="stat-card animate-in animate-in-delay-1" style="--accent:var(--emerald)">
+    <span class="stat-icon">📤</span>
+    <div class="stat-label">Acceptance Letters</div>
+    <div class="stat-value" id="c2">0</div>
+    <div class="stat-delta">12 pending review</div>
+  </div>
+  <div class="stat-card animate-in animate-in-delay-2" style="--accent:var(--rose)">
+    <span class="stat-icon">📩</span>
+    <div class="stat-label">Rejection Letters</div>
+    <div class="stat-value" id="c3">0</div>
+    <div class="stat-delta">With skill gap analysis</div>
+  </div>
+</div>
+
+<div class="grid grid-2 gap-20">
+  <!-- Generator -->
+  <div>
+    <div class="card animate-in animate-in-delay-1 mb-20">
+      <div class="card-header"><span class="card-title">Generate Feedback</span></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Candidate</label>
+          <select class="form-select" id="fb-candidate">
+            <option value="accepted">Sara Al-Rashid (Shortlisted)</option>
+            <option value="rejected">Ahmed Hassan (Reviewed)</option>
+            <option>Lena Müller (Shortlisted)</option>
+            <option>Omar Khaled (Pending)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Feedback Type</label>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius-md);padding:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px">
+              <input type="radio" name="fb-type" value="acceptance" style="accent-color:var(--emerald)" checked> 
+              <div><div style="font-weight:600;font-size:13px">Acceptance</div><div style="font-size:11px;color:var(--mist)">Shortlist / invite</div></div>
+            </label>
+            <label style="flex:1;background:rgba(255,95,109,0.08);border:1px solid rgba(255,95,109,0.2);border-radius:var(--radius-md);padding:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px">
+              <input type="radio" name="fb-type" value="rejection" style="accent-color:var(--rose)">
+              <div><div style="font-weight:600;font-size:13px">Rejection</div><div style="font-size:11px;color:var(--mist)">With skill gap report</div></div>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tone</label>
+          <select class="form-select">
+            <option>Professional & Encouraging</option>
+            <option>Formal & Brief</option>
+            <option>Warm & Detailed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Include</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${['Score breakdown','Skill gap analysis','Improvement suggestions','Next steps','Resources'].map(opt=>`
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+                <input type="checkbox" checked style="accent-color:var(--teal)"> ${opt}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="generateFeedback()">
+            🤖 Generate with AI
+          </button>
+          <button class="btn btn-secondary" onclick="showToast('Draft saved','info')">💾 Save Draft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="card animate-in animate-in-delay-2">
+    <div class="card-header">
+      <span class="card-title">Feedback Preview</span>
+      <div style="display:flex;gap:8px" id="preview-actions" style="display:none">
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Copied to clipboard','info')">📋 Copy</button>
+        <button class="btn btn-primary btn-sm" onclick="showToast('Sent to candidate!','success')">📤 Send</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="feedback-output">
+        <div style="text-align:center;padding:60px 20px;color:var(--mist)">
+          <div style="font-size:40px;margin-bottom:12px;opacity:.3">✉️</div>
+          <div style="font-size:14px">Click "Generate with AI" to create personalized feedback</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-20 animate-in animate-in-delay-3">
+  <div class="card-header">
+    <span class="card-title">Recently Sent Feedback</span>
+    <a href="#" class="btn btn-ghost btn-sm">View all</a>
+  </div>
+  <div class="card-body">
+    ${[
+      {n:'Sara Al-Rashid',type:'Acceptance',role:'Software Engineer',time:'2h ago',status:'Delivered',icon:'✅',c:'badge-emerald'},
+      {n:'Nora Al-Ghamdi',type:'Rejection',role:'Data Analyst',time:'5h ago',status:'Delivered',icon:'📩',c:'badge-rose'},
+      {n:'Carlos Ruiz',type:'Rejection',role:'Software Engineer',time:'1d ago',status:'Delivered',icon:'📩',c:'badge-rose'},
+      {n:'Priya Sharma',type:'Acceptance',role:'AI Researcher',time:'2d ago',status:'Delivered',icon:'✅',c:'badge-emerald'},
+      {n:'James Okafor',type:'Acceptance',role:'DevOps Engineer',time:'2d ago',status:'Delivered',icon:'✅',c:'badge-emerald'},
+    ].map(r=>`
+      <div class="sent-feedback-row">
+        <span style="font-size:20px">${r.icon}</span>
+        <div class="avatar" style="width:34px;height:34px;font-size:12px">${r.n.split(' ').map(x=>x[0]).join('')}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${r.n}</div>
+          <div style="font-size:11px;color:var(--mist)">${r.role} · ${r.type}</div>
+        </div>
+        <span class="badge ${r.c}">${r.status}</span>
+        <span style="font-size:11px;color:var(--mist);font-family:var(--font-mono)">${r.time}</span>
+      </div>
+    `).join('')}
+  </div>
+</div>
+`;
+
+animateCount(document.getElementById('c1'), 47);
+animateCount(document.getElementById('c2'), 12);
+animateCount(document.getElementById('c3'), 35);
+
+function generateFeedback() {
+  const candidateVal = document.getElementById('fb-candidate').value;
+  const outputEl = document.getElementById('feedback-output');
+  outputEl.innerHTML = `
+    <div class="generating-box">
+      <div class="generating-spinner"></div>
+      <div style="font-size:13px;color:var(--mist)">Generating personalized AI feedback…</div>
+    </div>
+  `;
+  setTimeout(() => {
+    const text = feedbackData[candidateVal] || feedbackData.accepted;
+    outputEl.innerHTML = `
+      <div class="feedback-preview">
+        <div id="typed-feedback"></div><span class="typing-cursor"></span>
+      </div>
+    `;
+    document.getElementById('preview-actions').style.display='flex';
+    let i=0; const speed=12;
+    const el = document.getElementById('typed-feedback');
+    const run=()=>{
+      if(i<text.length){
+        el.textContent += text[i++];
+        el.closest('.feedback-preview').scrollTop = el.closest('.feedback-preview').scrollHeight;
+        setTimeout(run,speed);
+      } else {
+        document.querySelector('.typing-cursor').style.display='none';
+        showToast('Feedback generated successfully!','success');
+      }
+    };
+    run();
+  }, 1800);
+}
+</script>
+</body>
+</html>

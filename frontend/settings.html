@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — Settings</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.settings-nav { display:flex; flex-direction:column; gap:2px; }
+.settings-nav-item {
+  padding:10px 14px; border-radius:var(--radius-md); cursor:pointer;
+  font-size:14px; font-weight:500; color:var(--mist); transition:all var(--transition);
+  display:flex; align-items:center; gap:10px;
+}
+.settings-nav-item:hover { background:rgba(255,255,255,0.05); color:var(--paper); }
+.settings-nav-item.active { background:var(--teal-glow); color:var(--teal); border:1px solid rgba(0,212,180,0.2); }
+.toggle-switch { position:relative; display:inline-block; width:46px; height:26px; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position:absolute; cursor:pointer; inset:0;
+  background:rgba(255,255,255,0.1); border-radius:26px; transition:.4s;
+}
+.toggle-slider::before {
+  content:''; position:absolute; width:20px; height:20px;
+  left:3px; top:3px; background:white; border-radius:50%; transition:.4s;
+}
+input:checked + .toggle-slider { background:var(--teal); }
+input:checked + .toggle-slider::before { transform:translateX(20px); }
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.setting-row:last-child { border-bottom:none; }
+.setting-info .setting-title { font-size:14px; font-weight:600; }
+.setting-info .setting-desc { font-size:12px; color:var(--mist); margin-top:3px; }
+.api-key-display {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--radius-md); padding:10px 14px;
+  font-family:var(--font-mono); font-size:13px; color:var(--mist);
+}
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('Settings', '');
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">Platform Settings</div>
+    <div class="section-subtitle">Configure SmartRecruit AI for your organization</div>
+  </div>
+  <button class="btn btn-primary" onclick="showToast('Settings saved successfully!','success')">💾 Save Changes</button>
+</div>
+
+<div class="grid gap-20 animate-in animate-in-delay-1" style="grid-template-columns:220px 1fr">
+  <!-- Settings Nav -->
+  <div class="card" style="height:fit-content">
+    <div class="card-body" style="padding:12px">
+      <div class="settings-nav">
+        ${[
+          {icon:'🤖',label:'AI Configuration',id:'ai'},
+          {icon:'🏢',label:'Organization',id:'org'},
+          {icon:'🔐',label:'Security & Privacy',id:'sec'},
+          {icon:'📧',label:'Notifications',id:'notif'},
+          {icon:'🔌',label:'Integrations',id:'int'},
+          {icon:'👥',label:'Team & Roles',id:'team'},
+          {icon:'⚖️',label:'Fairness & Ethics',id:'ethics'},
+          {icon:'📄',label:'Data Retention',id:'data'},
+        ].map((n,i)=>`
+          <div class="settings-nav-item ${i===0?'active':''}" onclick="switchTab('${n.id}',this)">
+            <span>${n.icon}</span> ${n.label}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Content -->
+  <div id="settings-content">
+    <!-- AI Config Tab (default) -->
+    <div class="card mb-20">
+      <div class="card-header"><span class="card-title">🤖 AI Model Configuration</span></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">AI Model</label>
+          <select class="form-select">
+            <option>claude-sonnet-4-6 (Recommended)</option>
+            <option>claude-opus-4-6 (High Accuracy)</option>
+            <option>gpt-4o</option>
+            <option>Custom API Endpoint</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <div class="api-key-display">
+            sk-ant-api03-••••••••••••••••••••••••••••••••
+            <button class="btn btn-ghost btn-sm btn-icon" style="margin-left:auto" onclick="showToast('API key revealed','info')">👁</button>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="showToast('Copied','info')">📋</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Tokens per Analysis</label>
+          <input class="form-input" type="number" value="2000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature (Creativity)</label>
+          <input type="range" style="width:100%;accent-color:var(--teal)" min="0" max="1" step="0.1" value="0.3">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mist);margin-top:4px">
+            <span>Precise</span><span>Balanced</span><span>Creative</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Explainable AI Mode</div><div class="setting-desc">Include reasoning behind every score and decision</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Bias Detection</div><div class="setting-desc">Automatically flag potentially biased scoring patterns</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Anonymous Screening Mode</div><div class="setting-desc">Hide candidate names during initial AI evaluation</div></div>
+          <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Continuous Learning Loop</div><div class="setting-desc">Allow AI to refine scoring weights based on HR feedback</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-20">
+      <div class="card-header"><span class="card-title">📊 Default Scoring Weights</span></div>
+      <div class="card-body">
+        <div style="font-size:13px;color:var(--mist);margin-bottom:16px">These defaults apply to all new job postings. Individual jobs can override these values.</div>
+        ${[
+          ['Technical Skills','35'],
+          ['Work Experience','25'],
+          ['Education Fit','20'],
+          ['Soft Skills','10'],
+          ['Verification Score','10'],
+        ].map(([l,v])=>`
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <span style="font-size:13px;min-width:150px">${l}</span>
+            <input type="range" style="flex:1;accent-color:var(--teal)" min="0" max="60" value="${v}">
+            <input class="form-input" type="number" value="${v}" style="width:64px;padding:8px;text-align:center">
+            <span style="font-size:12px;color:var(--mist)">%</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">📁 Supported File Formats</span></div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">PDF (.pdf)</div><div class="setting-desc">Recommended format for best parsing accuracy</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Word Document (.docx)</div><div class="setting-desc">Microsoft Word format support</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-title">Max File Size</div></div>
+          <select class="form-select" style="width:auto;padding:7px 12px;font-size:13px"><option>10 MB</option><option>5 MB</option><option>20 MB</option></select>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="showToast('Settings saved!','success')">💾 Save Settings</button>
+          <button class="btn btn-secondary" onclick="showToast('Settings reset to defaults','info')">↺ Reset Defaults</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+function switchTab(id, el) {
+  document.querySelectorAll('.settings-nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  showToast(`${el.textContent.trim()} settings loaded`,'info');
+}
+</script>
+</body>
+</html>

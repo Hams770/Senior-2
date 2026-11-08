@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartRecruit AI — CV Screening</title>
+<link rel="stylesheet" href="css/design-system.css">
+<style>
+.process-step-box {
+  display:flex; align-items:flex-start; gap:14px;
+  padding:14px 16px;
+  border-radius:var(--radius-md);
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  transition:all 0.3s;
+}
+.process-step-box.running { border-color:var(--teal); background:var(--teal-glow); }
+.process-step-box.done { border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.05); }
+.step-status-icon { font-size:18px; width:24px; flex-shrink:0; }
+.step-title { font-size:13px; font-weight:600; }
+.step-desc { font-size:12px; color:var(--mist); margin-top:2px; }
+.spinner { width:18px; height:18px; border:2px solid rgba(0,212,180,0.3); border-top-color:var(--teal); border-radius:50%; animation:spin 0.8s linear infinite; }
+.results-panel { opacity:0; transition:opacity 0.5s ease; }
+.results-panel.visible { opacity:1; }
+.extracted-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.extracted-item:last-child { border-bottom:none; }
+.extracted-label { font-size:11px; font-weight:600; color:var(--mist); text-transform:uppercase; letter-spacing:.5px; min-width:110px; }
+.extracted-value { font-size:13px; }
+.ai-summary-box {
+  background:linear-gradient(135deg,rgba(0,212,180,0.06),rgba(124,106,247,0.06));
+  border:1px solid rgba(0,212,180,0.15);
+  border-radius:var(--radius-md);
+  padding:16px;
+}
+.typing-cursor { display:inline-block; width:2px; height:14px; background:var(--teal); margin-left:2px; animation:pulse 0.8s infinite; vertical-align:text-bottom; }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<script src="js/shell.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderShell('CV Screening', '');
+
+const body = document.getElementById('page-body');
+body.innerHTML = `
+<div class="section-header animate-in">
+  <div>
+    <div class="section-title">CV Screening Engine</div>
+    <div class="section-subtitle">Upload and analyze candidate CVs using LLM-powered extraction</div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <span class="badge badge-teal">● AI Online</span>
+    <a href="candidates.html" class="btn btn-secondary btn-sm">← Back to Candidates</a>
+  </div>
+</div>
+
+<div class="grid grid-2 gap-20">
+  <!-- Upload Panel -->
+  <div>
+    <div class="card animate-in animate-in-delay-1 mb-20">
+      <div class="card-header"><span class="card-title">Upload CV</span></div>
+      <div class="card-body">
+        <div class="upload-zone" id="upload-zone">
+          <div style="font-size:36px;margin-bottom:12px">📄</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Drop CV here or click to upload</div>
+          <div style="font-size:12px;color:var(--mist)">Supports PDF, DOC, DOCX · Max 10MB</div>
+        </div>
+        <div id="file-preview" style="display:none;margin-top:14px">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(0,212,180,0.08);border:1px solid rgba(0,212,180,0.2);border-radius:var(--radius-md)">
+            <span style="font-size:22px">📄</span>
+            <div>
+              <div style="font-size:13px;font-weight:600" id="file-name">—</div>
+              <div style="font-size:11px;color:var(--mist)" id="file-size">—</div>
+            </div>
+            <button class="btn btn-ghost btn-sm btn-icon" style="margin-left:auto" onclick="resetUpload()">✕</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label class="form-label">Job Position</label>
+          <select class="form-select" id="job-select">
+            <option value="">Select a job posting…</option>
+            <option value="swe">Software Engineer</option>
+            <option value="ds">Data Scientist</option>
+            <option value="ml">ML Engineer</option>
+            <option value="pm">Product Manager</option>
+            <option value="be">Backend Developer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Screening Notes (optional)</label>
+          <textarea class="form-textarea" placeholder="Add context for the AI analysis…" style="min-height:70px"></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" id="analyze-btn" onclick="startAnalysis()">
+          🔍 Analyze CV with AI
+        </button>
+      </div>
+    </div>
+
+    <!-- Processing Steps -->
+    <div class="card animate-in animate-in-delay-2" id="process-card" style="display:none">
+      <div class="card-header"><span class="card-title">AI Processing Pipeline</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:8px" id="process-steps"></div>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="results-panel" id="results-panel">
+    <div class="card mb-20">
+      <div class="card-header">
+        <span class="card-title">Extracted Profile</span>
+        <span class="badge badge-teal">AI Generated</span>
+      </div>
+      <div class="card-body" id="extracted-data">
+        <div style="text-align:center;padding:40px 20px;color:var(--mist)">
+          <div style="font-size:36px;margin-bottom:12px;opacity:.3">🤖</div>
+          <div style="font-size:14px">Upload a CV and click Analyze to see results</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">AI Analysis Summary</span>
+        <span class="badge badge-violet">LLM Output</span>
+      </div>
+      <div class="card-body">
+        <div id="ai-summary-content" style="text-align:center;padding:40px 20px;color:var(--mist)">
+          <div style="font-size:36px;margin-bottom:12px;opacity:.3">💬</div>
+          <div style="font-size:14px">Analysis will appear here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+initUploadZone(document.getElementById('upload-zone'), file => {
+  document.getElementById('file-preview').style.display = 'block';
+  document.getElementById('upload-zone').style.display = 'none';
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-size').textContent = (file.size/1024).toFixed(1) + ' KB';
+});
+
+function resetUpload() {
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('upload-zone').style.display = 'block';
+}
+
+const processingSteps = [
+  { label:'File Parsing', desc:'Extracting raw text from PDF/DOC format', icon:'📄' },
+  { label:'Data Cleaning', desc:'Removing noise, normalizing encoding', icon:'🧹' },
+  { label:'LLM Analysis', desc:'Sending to AI model for contextual understanding', icon:'🧠' },
+  { label:'Skill Extraction', desc:'Identifying technical and soft skills', icon:'⚡' },
+  { label:'Experience Parsing', desc:'Quantifying work history and domain', icon:'📅' },
+  { label:'Education Mapping', desc:'Classifying degree level and field', icon:'🎓' },
+  { label:'Score Computation', desc:'Running weighted scoring engine', icon:'📊' },
+  { label:'Profile Generation', desc:'Building structured candidate record', icon:'✅' },
+];
+
+function startAnalysis() {
+  if (!document.getElementById('job-select').value) {
+    showToast('Please select a job position first', 'warning'); return;
+  }
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('analyze-btn').textContent = '⏳ Analyzing…';
+  const card = document.getElementById('process-card');
+  card.style.display = 'block';
+  const stepsEl = document.getElementById('process-steps');
+  stepsEl.innerHTML = processingSteps.map((s,i)=>`
+    <div class="process-step-box" id="pstep-${i}">
+      <span class="step-status-icon" id="pstep-icon-${i}">⬜</span>
+      <div><div class="step-title">${s.icon} ${s.label}</div><div class="step-desc">${s.desc}</div></div>
+    </div>
+  `).join('');
+
+  simulateAIProcessing(processingSteps, (step, i) => {
+    if (i > 0) {
+      const prev = document.getElementById(`pstep-${i-1}`);
+      prev.classList.remove('running'); prev.classList.add('done');
+      document.getElementById(`pstep-icon-${i-1}`).textContent = '✅';
+    }
+    const cur = document.getElementById(`pstep-${i}`);
+    cur.classList.add('running');
+    const iconEl = document.getElementById(`pstep-icon-${i}`);
+    iconEl.innerHTML = '<div class="spinner"></div>';
+  }, () => {
+    const last = document.getElementById(`pstep-${processingSteps.length-1}`);
+    last.classList.remove('running'); last.classList.add('done');
+    document.getElementById(`pstep-icon-${processingSteps.length-1}`).textContent = '✅';
+    showResults();
+    document.getElementById('analyze-btn').disabled = false;
+    document.getElementById('analyze-btn').textContent = '🔍 Analyze Another CV';
+    showToast('CV analyzed successfully! Score: 88/100', 'success');
+  }, 700);
+}
+
+function showResults() {
+  const panel = document.getElementById('results-panel');
+  panel.classList.add('visible');
+
+  document.getElementById('extracted-data').innerHTML = `
+    <div class="extracted-item">
+      <span class="extracted-label">Full Name</span>
+      <span class="extracted-value" style="font-weight:600">Sara Al-Rashid</span>
+    </div>
+    <div class="extracted-item">
+      <span class="extracted-label">Email</span>
+      <span class="extracted-value">sara.rashid@email.com</span>
+    </div>
+    <div class="extracted-item">
+      <span class="extracted-label">Education</span>
+      <span class="extracted-value">B.Sc Computer Science — KAUST, 2022</span>
+    </div>
+    <div class="extracted-item">
+      <span class="extracted-label">Experience</span>
+      <span class="extracted-value">4 years · Software Engineering</span>
+    </div>
+    <div class="extracted-item">
+      <span class="extracted-label">Technical Skills</span>
+      <div class="skill-tags">${['Python','React','TensorFlow','SQL','Docker','FastAPI'].map(s=>`<span class="chip teal">${s}</span>`).join('')}</div>
+    </div>
+    <div class="extracted-item">
+      <span class="extracted-label">Soft Skills</span>
+      <div class="skill-tags">${['Leadership','Communication','Teamwork'].map(s=>`<span class="chip violet">${s}</span>`).join('')}</div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="score-ring" data-score="88">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+          <circle class="ring-progress" cx="50" cy="50" r="40" fill="none" stroke="var(--teal)" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+        <div class="score-text"><div class="score-number" style="font-size:20px">88</div><div class="score-label">Match</div></div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--mist);margin-bottom:8px">Score Breakdown</div>
+        ${[['Technical Skills','93'],['Experience Match','85'],['Education Fit','88'],['Soft Skills','79']].map(([l,v])=>`
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:12px;min-width:120px">${l}</span>
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" data-width="${v}%" style="width:0"></div></div>
+            <span style="font-size:12px;color:var(--mist);min-width:32px;text-align:right">${v}%</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary btn-sm" onclick="showToast('Candidate shortlisted!','success')">⭐ Shortlist</button>
+      <a href="verification.html" class="btn btn-secondary btn-sm">✅ Send Verification</a>
+      <a href="feedback.html" class="btn btn-secondary btn-sm">💬 Generate Feedback</a>
+    </div>
+  `;
+
+  const summary = `This candidate demonstrates strong alignment with the Software Engineer position. With 4 years of professional experience and a Computer Science degree from a reputable institution, Sara Al-Rashid presents a compelling technical profile. Her expertise in Python and React is directly applicable, and her TensorFlow experience adds valuable ML capability to the team.
+
+Key strengths include a well-rounded technical stack and demonstrated project leadership. The AI model identified consistent career progression and strong communication indicators within the CV text.
+
+Recommended for shortlisting and technical skill verification.`;
+
+  const sumEl = document.getElementById('ai-summary-content');
+  sumEl.innerHTML = `<div class="ai-summary-box"><div id="typed-text" style="font-size:13px;line-height:1.7;color:var(--paper)"></div><span class="typing-cursor"></span></div>`;
+  typeText(document.getElementById('typed-text'), summary, 18);
+  setTimeout(() => { document.querySelector('.typing-cursor').style.display='none'; }, summary.length*18+500);
+  animateBars(); animateRings();
+}
+
+function typeText(el, text, speed=20) {
+  let i=0; const run=()=>{ if(i<text.length){el.textContent+=text[i++];setTimeout(run,speed);} };
+  run();
+}
+</script>
+</body>
+</html>
