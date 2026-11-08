@@ -42,3 +42,16 @@ def test_no_retry_on_bad_key(monkeypatch):
     monkeypatch.setattr(config, "LLM_API_KEY", "bad")
     monkeypatch.setattr(feedback_writer.httpx, "post", unauthorized)
     assert feedback_writer.write_draft(SUMMARY)[1] == "template" and len(calls) == 1
+
+
+def test_env_file_is_read_and_real_env_wins(tmp_path, monkeypatch):
+    env = tmp_path / ".env"
+    env.write_text("# comment\nHM_TEST_A=from_file\nHM_TEST_B='quoted'\nHM_TEST_C=from_file\n")
+    monkeypatch.delenv("HM_TEST_A", raising=False)
+    monkeypatch.delenv("HM_TEST_B", raising=False)
+    monkeypatch.setenv("HM_TEST_C", "from_env")
+    config._load_env_file(env)
+    import os
+    assert os.environ["HM_TEST_A"] == "from_file" and os.environ["HM_TEST_B"] == "quoted" and os.environ["HM_TEST_C"] == "from_env"
+    for k in ("HM_TEST_A", "HM_TEST_B"):
+        monkeypatch.delenv(k)

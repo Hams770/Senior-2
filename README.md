@@ -40,8 +40,9 @@ uvicorn app.main:app --reload
 - API documentation (try every endpoint): http://127.0.0.1:8000/docs
 - The platform: http://127.0.0.1:8000/login.html (sign in with the admin account, add an HR account in Settings, or create a candidate account on the sign-in page)
 
-By default the data is stored in SQLite (`backend/hiremind.db`). To use PostgreSQL, run
-`docker compose up -d` and set `DATABASE_URL` as in [`backend/.env.example`](backend/.env.example).
+By default the data is stored in SQLite (`backend/hiremind.db`). Settings go in `backend/.env` (copy
+[`backend/.env.example`](backend/.env.example); the file is never committed): `DATABASE_URL` for PostgreSQL
+(`docker compose up -d` starts one), and `ANTHROPIC_API_KEY` to have feedback drafts written by the LLM instead of the template.
 
 **Tests:** `cd backend && pytest -q` (91 tests). On every push GitHub also runs a browser test of every screen and the
 non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are published to the `test-results` branch.
