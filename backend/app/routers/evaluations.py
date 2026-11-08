@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from .. import audit
-from ..models import Application, Decision, Evaluation, Job, ScoringPolicy
+from ..models import Application, Decision, Evaluation, Job, ScoringPolicy, User
 from ..scoring import COMPONENTS, compute_score, rank
 from ..security import DB, HRUser
 from .assessments import verification_score
@@ -134,7 +134,9 @@ def ranking(job_id: int, user: HRUser, db: DB, stage: Literal["any", "final"] = 
         ev = latest_evaluation(db, app.id)
         if ev and (stage == "any" or ev.stage == "final"):
             decision = db.scalar(select(Decision).where(Decision.application_id == app.id))
+            cand = db.get(User, app.candidate_id)
             rows[app.id] = {**evaluation_view(ev, db.get(ScoringPolicy, ev.policy_id)),
+                            "candidate": cand.full_name or cand.email.split("@")[0],
                             "status": app.status, "decision": decision.outcome if decision else None}
     ranks = rank({k: v["score"] for k, v in rows.items()})
     out = [{"rank": ranks[k], **v} for k, v in rows.items()]

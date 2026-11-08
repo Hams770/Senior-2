@@ -17,6 +17,31 @@ jobs:
           curl -sf http://127.0.0.1:8000/api/health
           curl -sf -o /dev/null http://127.0.0.1:8000/index.html
           curl -sf -X POST http://127.0.0.1:8000/api/auth/login -d 'username=admin@hiremind.test&password=AdminPass123' | grep access_token
+  e2e:
+    name: Browser test of every screen
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r backend/requirements.txt playwright==1.49.1 && python -m playwright install --with-deps chromium
+      - name: Start the server on an empty database
+        working-directory: backend
+        run: |
+          python -m app.cli create-admin admin@hiremind.test 'AdminPass123'
+          nohup uvicorn app.main:app --port 8000 > ../server.log 2>&1 &
+          sleep 4 && curl -sf http://127.0.0.1:8000/api/health
+      - run: python e2e/run_e2e.py
+      - if: always()
+        run: cat server.log | tail -40
+      - name: Publish screenshots to the e2e-screenshots branch
+        if: always() && github.event_name == 'push'
+        run: |
+          cd e2e/screenshots && git init -q && git checkout -q -b e2e-screenshots
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" e2e-screenshots
   postgres:
     runs-on: ubuntu-latest
     services:

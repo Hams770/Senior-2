@@ -2,181 +2,102 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SmartRecruit AI — Skill Verification</title>
+<title>HireMind — Skill Verification</title>
 <link rel="stylesheet" href="css/design-system.css">
-<style>
-.ver-card { background:var(--ink-3); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-lg); padding:18px; margin-bottom:12px; transition:border-color var(--transition); }
-.ver-card:hover { border-color:rgba(0,212,180,0.2); }
-.test-question { background:rgba(255,255,255,0.03); border-radius:var(--radius-md); padding:14px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.05); }
-.test-option { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--transition); font-size:13px; margin-top:6px; }
-.test-option:hover { background:rgba(255,255,255,0.05); }
-.test-option input { accent-color:var(--teal); }
-.result-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
-.result-row:last-child { border-bottom:none; }
-.ver-status-icon { font-size:22px; }
-.challenge-tab { padding:8px 16px; border-radius:var(--radius-full); font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.1); background:transparent; color:var(--mist); transition:all var(--transition); }
-.challenge-tab.active { background:var(--teal-glow); border-color:rgba(0,212,180,0.3); color:var(--teal); }
-</style>
 </head>
 <body>
 <div id="app-root"></div>
-<script src="js/shell.js"></script>
 <script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
 <script>
-renderShell('Skill Verification', '');
-
-const body = document.getElementById('page-body');
-body.innerHTML = `
-<div class="section-header animate-in">
-  <div>
-    <div class="section-title">Skill Verification Layer</div>
-    <div class="section-subtitle">Automated practical challenges to validate candidate claims beyond the resume</div>
-  </div>
-  <button class="btn btn-primary" onclick="showToast('Test suite generated and sent!','success')">+ Generate New Test</button>
-</div>
-
-<div class="grid grid-3 gap-20 mb-24">
-  <div class="stat-card animate-in animate-in-delay-1" style="--accent:var(--teal)">
-    <span class="stat-icon">📋</span>
-    <div class="stat-label">Tests Sent</div>
-    <div class="stat-value" id="c1">0</div>
-    <div class="stat-delta">↑ 4 today</div>
-  </div>
-  <div class="stat-card animate-in animate-in-delay-2" style="--accent:var(--emerald)">
-    <span class="stat-icon">✅</span>
-    <div class="stat-label">Completed</div>
-    <div class="stat-value" id="c2">0</div>
-    <div class="stat-delta">77% completion rate</div>
-  </div>
-  <div class="stat-card animate-in animate-in-delay-3" style="--accent:var(--violet)">
-    <span class="stat-icon">⭐</span>
-    <div class="stat-label">Avg Verification Score</div>
-    <div class="stat-value" id="c3">0</div>
-    <div class="stat-delta">of 100 points</div>
-  </div>
-</div>
-
-<div class="grid grid-3 gap-20">
-  <!-- Test Builder -->
-  <div>
-    <div class="card animate-in animate-in-delay-1 mb-20">
-      <div class="card-header"><span class="card-title">Build Verification Test</span></div>
-      <div class="card-body">
-        <div class="form-group">
-          <label class="form-label">Select Candidate</label>
-          <select class="form-select">
-            <option>Omar Khaled</option>
-            <option>Yuki Tanaka</option>
-            <option>Fatima Zahra</option>
-            <option>Nora Al-Ghamdi</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Skills to Verify</label>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-            ${['Python','React','SQL','Docker','Node.js','ML','REST API'].map(s=>`
-              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:var(--radius-full);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:12px;transition:all .2s" onchange="this.style.background=this.querySelector('input').checked?'var(--teal-glow)':'rgba(255,255,255,0.04)';this.style.borderColor=this.querySelector('input').checked?'rgba(0,212,180,0.3)':'rgba(255,255,255,0.08)'">
-                <input type="checkbox" style="accent-color:var(--teal)"> ${s}
-              </label>
-            `).join('')}
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Challenge Type</label>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="challenge-tab active" onclick="setTab(this)">MCQ</button>
-            <button class="challenge-tab" onclick="setTab(this)">Code Task</button>
-            <button class="challenge-tab" onclick="setTab(this)">Case Study</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Difficulty Level</label>
-          <select class="form-select">
-            <option>Intermediate</option>
-            <option>Beginner</option>
-            <option>Advanced</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Time Limit</label>
-          <select class="form-select">
-            <option>30 minutes</option>
-            <option>45 minutes</option>
-            <option>60 minutes</option>
-            <option>90 minutes</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="showToast('Test generated and sent via email!','success')">
-          🤖 Generate AI Test & Send
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sample Test Preview -->
-  <div class="card animate-in animate-in-delay-2">
-    <div class="card-header">
-      <span class="card-title">Test Preview</span>
-      <span class="badge badge-violet">AI Generated</span>
-    </div>
-    <div class="card-body">
-      <div style="font-size:12px;color:var(--mist);margin-bottom:14px">Python — Intermediate MCQ · 30 min · 5 questions</div>
-      <div class="test-question">
-        <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">Q1 of 5</div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px">What is the time complexity of a Python dict lookup?</div>
-        ${['O(1) — average case','O(n) — worst case','O(log n)','O(n²)'].map((opt,i)=>`
-          <div class="test-option"><input type="radio" name="q1"> ${String.fromCharCode(65+i)}. ${opt}</div>
-        `).join('')}
-      </div>
-      <div class="test-question">
-        <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">Q2 of 5</div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px">Which of the following creates a generator in Python?</div>
-        ${['Using yield inside a function','Using return inside a function','Using async/await','Calling list()'].map((opt,i)=>`
-          <div class="test-option"><input type="radio" name="q2"> ${String.fromCharCode(65+i)}. ${opt}</div>
-        `).join('')}
-      </div>
-      <div style="text-align:center;padding:8px 0;color:var(--mist);font-size:12px">… 3 more questions</div>
-      <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;margin-top:8px">
-        👁 Preview Full Test
-      </button>
-    </div>
-  </div>
-
-  <!-- Results -->
-  <div class="card animate-in animate-in-delay-3">
-    <div class="card-header"><span class="card-title">Verification Results</span></div>
-    <div class="card-body">
-      ${[
-        {n:'Sara Al-Rashid',skills:'Python, React',score:95,status:'Passed',icon:'✅',c:'badge-teal'},
-        {n:'Ahmed Hassan',skills:'Python, ML',score:88,status:'Passed',icon:'✅',c:'badge-teal'},
-        {n:'James Okafor',skills:'Docker, K8s',score:92,status:'Passed',icon:'✅',c:'badge-teal'},
-        {n:'Priya Sharma',skills:'NLP, BERT',score:85,status:'Passed',icon:'✅',c:'badge-teal'},
-        {n:'Omar Khaled',skills:'Node.js',score:0,status:'Pending',icon:'⏳',c:'badge-amber'},
-        {n:'Yuki Tanaka',skills:'React',score:0,status:'Sent',icon:'📤',c:'badge-sky'},
-        {n:'Nora Al-Ghamdi',skills:'SQL, Power BI',score:0,status:'Not Sent',icon:'⬜',c:'badge-rose'},
-      ].map(r=>`
-        <div class="result-row">
-          <span class="ver-status-icon">${r.icon}</span>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:600">${r.n}</div>
-            <div style="font-size:11px;color:var(--mist)">${r.skills}</div>
-          </div>
-          ${r.score?`<span style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--teal)">${r.score}</span>`:''}
-          <span class="badge ${r.c}">${r.status}</span>
-        </div>
-      `).join('')}
-    </div>
-  </div>
-</div>
-`;
-
-animateCount(document.getElementById('c1'), 19);
-animateCount(document.getElementById('c2'), 14);
-animateCount(document.getElementById('c3'), 87);
-
-function setTab(el) {
-  document.querySelectorAll('.challenge-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+startPage('Skill Verification', '', ['hr', 'admin'], async body => {
+  body.innerHTML = `<div class="section-header mb-24"><div><div class="section-title">Assessments</div>
+    <div class="section-subtitle">Short tests that check the skills a CV claims. Multiple choice is marked automatically; practical answers are marked by you with the rubric.</div></div>
+    <div id="picker" style="margin-left:auto"></div></div>
+    <div class="grid grid-2 gap-20 mb-24"><div class="card" id="tests"></div><div class="card" id="assign"></div></div>
+    <div class="card" id="grading"></div>`;
+  await jobPicker('picker', id => { JOB = id; load(); });
+});
+let JOB, TESTS = [], JOBINFO;
+async function load() {
+  [TESTS, JOBINFO] = await Promise.all([api(`/api/jobs/${JOB}/assessments`), api(`/api/jobs/${JOB}`)]);
+  document.getElementById('tests').innerHTML = `<div class="card-header"><span class="card-title">Assessments for this job</span>
+    <button class="btn btn-primary btn-sm" onclick="newTest()">New assessment</button></div>
+    ${TESTS.length ? `<table class="data-table"><tbody>${TESTS.map(t => `<tr><td><strong>${esc(t.title)}</strong><div class="hm-note">${esc(t.skill)} · ${t.type === 'mcq' ? t.content.questions.length + ' questions' : 'practical, rubric of ' + t.content.rubric.length} · ${t.time_limit_min} min</div></td></tr>`).join('')}</tbody></table>`
+    : '<div class="hm-empty">No assessments yet.</div>'}`;
+  const cands = await api(`/api/jobs/${JOB}/candidates`);
+  document.getElementById('assign').innerHTML = `<div class="card-header"><span class="card-title">Assign to an applicant</span></div><div class="card-body">
+    ${cands.length && TESTS.length ? `<div class="form-group"><select class="form-select" id="a-app">${cands.map(c => `<option value="${c.application_id}">${esc(c.candidate)}</option>`).join('')}</select></div>
+      <div class="form-group">${TESTS.map(t => `<label style="display:flex;gap:8px;font-size:13px;margin-bottom:6px"><input type="checkbox" value="${t.id}" class="a-test"> ${esc(t.title)}</label>`).join('')}</div>
+      <button class="btn btn-primary btn-sm" onclick="assign()">Assign</button>`
+    : '<div class="hm-note">Create an assessment and wait for applications first.</div>'}</div>`;
+  const attempts = await api(`/api/jobs/${JOB}/attempts`);
+  document.getElementById('grading').innerHTML = `<div class="card-header"><span class="card-title">Attempts</span></div>
+    ${attempts.length ? `<table class="data-table"><thead><tr><th>Candidate</th><th>Assessment</th><th>Status</th><th>Score</th><th></th></tr></thead><tbody>
+    ${attempts.map(a => `<tr><td>${esc(a.candidate)}</td><td>${esc(a.assessment.title)}</td><td>${statusBadge(a.status)}</td><td>${a.score === null ? (a.status === 'expired' ? 'not assessed' : '—') : Math.round(a.score)}</td>
+      <td>${a.status === 'submitted' ? `<button class="btn btn-primary btn-sm" onclick='grade(${a.id})'>Mark</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+    : '<div class="hm-empty">No attempts yet.</div>'}`;
+  window.ATTEMPTS = attempts;
+}
+function newTest() {
+  modal(`<div class="section-title mb-16">New assessment</div>
+    <div class="grid grid-3 gap-16">
+      <div class="form-group"><label class="form-label">Skill</label><select class="form-select" id="t-skill">${JOBINFO.required_skills.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="t-type" onchange="typeFields()"><option value="mcq">Multiple choice</option><option value="practical">Practical</option></select></div>
+      <div class="form-group"><label class="form-label">Minutes</label><input class="form-input" id="t-min" type="number" value="15" min="1" max="240"></div></div>
+    <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="t-title"></div>
+    <div id="t-fields"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveTest()">Create</button></div>`);
+  typeFields();
+}
+function typeFields() {
+  const mcq = document.getElementById('t-type').value === 'mcq';
+  document.getElementById('t-fields').innerHTML = mcq
+    ? `<div class="form-group"><label class="form-label">Questions: one block per question. First line is the question, then one option per line; start the correct option with *</label>
+       <textarea class="form-textarea" id="t-q" rows="9" placeholder="Which clause filters groups?\nWHERE\n*HAVING\nORDER BY\n\nWhich join keeps all rows of the left table?\nINNER\n*LEFT"></textarea></div>`
+    : `<div class="form-group"><label class="form-label">Task for the candidate</label><textarea class="form-textarea" id="t-prompt" rows="3"></textarea></div>
+       <div class="form-group"><label class="form-label">Rubric: one criterion per line as "criterion | maximum points"</label>
+       <textarea class="form-textarea" id="t-rubric" rows="3" placeholder="Correct approach | 6\nClear explanation | 4"></textarea></div>
+       <p class="hm-note">Answers are text only; candidate code is never run.</p>`;
+}
+async function saveTest() {
+  const type = document.getElementById('t-type').value;
+  const body = { skill: document.getElementById('t-skill').value, type, title: document.getElementById('t-title').value.trim(), time_limit_min: Number(document.getElementById('t-min').value) };
+  if (type === 'mcq') {
+    body.questions = document.getElementById('t-q').value.trim().split(/\n\s*\n/).map(block => {
+      const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+      const options = lines.slice(1);
+      return { text: lines[0] || '', options: options.map(o => o.replace(/^\*/, '').trim()), answer: options.findIndex(o => o.startsWith('*')) };
+    });
+  } else {
+    body.prompt = document.getElementById('t-prompt').value.trim();
+    body.rubric = document.getElementById('t-rubric').value.split('\n').map(l => l.trim()).filter(Boolean)
+      .map(l => { const [c, p] = l.split('|'); return { criterion: (c || '').trim(), max_points: Number(p) }; });
+  }
+  await act(() => api(`/api/jobs/${JOB}/assessments`, { method: 'POST', body }), 'Assessment created');
+  closeModal(); load();
+}
+async function assign() {
+  const ids = [...document.querySelectorAll('.a-test:checked')].map(c => Number(c.value));
+  if (!ids.length) return showToast('Tick at least one assessment', 'warning');
+  await act(() => api(`/api/applications/${document.getElementById('a-app').value}/assessments`, { method: 'POST', body: { assessment_ids: ids } }), 'Assigned');
+  load();
+}
+function grade(id) {
+  const a = ATTEMPTS.find(x => x.id === id);
+  modal(`<div class="section-title mb-8">${esc(a.assessment.title)}</div>
+    <div class="hm-note mb-8">Task: ${esc(a.assessment.content.prompt)}</div>
+    <div class="card mb-16"><div class="card-body" style="white-space:pre-wrap;font-size:14px">${esc(a.answers.response)}</div></div>
+    ${a.assessment.content.rubric.map((r, i) => `<div class="form-group"><label class="form-label">${esc(r.criterion)} (0–${r.max_points})</label>
+      <input class="form-input g-pt" data-c="${esc(r.criterion)}" type="number" min="0" max="${r.max_points}" step="0.5"></div>`).join('')}
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="g-notes"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveGrade(${id})">Save marks</button></div>`);
+}
+async function saveGrade(id) {
+  const points = Object.fromEntries([...document.querySelectorAll('.g-pt')].map(i => [i.dataset.c, Number(i.value)]));
+  await act(() => api(`/api/attempts/${id}/grade`, { method: 'POST', body: { points, notes: document.getElementById('g-notes').value } }), 'Marked');
+  closeModal(); load();
 }
 </script>
 </body>
