@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "backend" / "tests"))
 from cvfiles import CV_LINES, make_docx, make_pdf, scanned_pdf  # noqa: E402
 
 BASE = "http://127.0.0.1:8000"
-OUT = ROOT / "e2e" / "screenshots"
+OUT = ROOT / "test-results" / "screenshots"
 OUT.mkdir(parents=True, exist_ok=True)
 problems = []
 

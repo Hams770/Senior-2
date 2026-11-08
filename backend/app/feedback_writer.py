@@ -66,19 +66,30 @@ def template_draft(summary: dict) -> str:
     return " ".join(lines)
 
 
+MAX_RETRIES = 2  # NFR-06: a failed call is retried at most twice
+
+
+def _call_llm(summary: dict) -> str:
+    r = httpx.post("https://api.anthropic.com/v1/messages", timeout=config.LLM_TIMEOUT_S,
+                   headers={"x-api-key": config.LLM_API_KEY, "anthropic-version": "2023-06-01",
+                            "content-type": "application/json"},
+                   json={"model": config.LLM_MODEL, "max_tokens": 600,
+                         "messages": [{"role": "user", "content": fill(summary)}]})
+    r.raise_for_status()
+    return "".join(b.get("text", "") for b in r.json().get("content", [])).strip()
+
+
 def write_draft(summary: dict) -> tuple[str, str, str]:
     """Returns (draft, source, model)."""
     if config.LLM_API_KEY:
-        try:
-            r = httpx.post("https://api.anthropic.com/v1/messages", timeout=config.LLM_TIMEOUT_S,
-                           headers={"x-api-key": config.LLM_API_KEY, "anthropic-version": "2023-06-01",
-                                    "content-type": "application/json"},
-                           json={"model": config.LLM_MODEL, "max_tokens": 600,
-                                 "messages": [{"role": "user", "content": fill(summary)}]})
-            r.raise_for_status()
-            text = "".join(b.get("text", "") for b in r.json().get("content", [])).strip()
-            if text:
-                return redact(text), "llm", config.LLM_MODEL
-        except (httpx.HTTPError, ValueError, KeyError):
-            pass  # NFR-06: fall back instead of failing the request
-    return template_draft(summary), "template", ""
+        for attempt in range(1 + MAX_RETRIES):
+            try:
+                text = _call_llm(summary)
+                if text:
+                    return redact(text), "llm", config.LLM_MODEL
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code < 500 and e.response.status_code != 429:
+                    break  # a request error (bad key, bad input) will not succeed on retry
+            except (httpx.HTTPError, ValueError, KeyError):
+                pass
+    return template_draft(summary), "template", ""  # fall back instead of failing the request
