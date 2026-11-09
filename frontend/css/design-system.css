@@ -1,23 +1,26 @@
 /* HireMind design system
-   Idea: HR reviews evidence before deciding, like reading a marked-up paper CV.
-   Quiet paper-and-ink pages; the one bold element is the highlighter that marks evidence and the current page. */
+   Light lavender and mint pages with soft tinted panels. The logo is a CV with one highlighted line and a check:
+   the system marks the evidence, HR verifies it. The yellow highlighter is still used for evidence in CVs. */
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root {
-  --paper: #F2F4F8;      /* page background, cool like copier paper */
+  --paper: #F7F5FE;      /* page background, light lavender */
+  --side: #EFEBFC;       /* sidebar */
   --surface: #FFFFFF;    /* panels */
-  --ink: #1C2238;        /* text, navy ink */
-  --muted: #5B6278;      /* secondary text */
-  --rule: #DCE0E8;       /* borders and dividers */
-  --pen: #2B3FBF;        /* actions and links, ballpoint blue */
-  --pen-dark: #1F2F94;
-  --marker: #FFE15A;     /* highlighter: evidence and "you are here" */
-  --ok: #2F7D57;  --ok-bg: #E3F2EA;
-  --warn: #8F5A0B; --warn-bg: #FBF0D9;
-  --bad: #B23A3A; --bad-bg: #F8E4E2;
-  --info: #2B3FBF; --info-bg: #E6E9FA;
-  --plain-bg: #ECEEF3;
-  --radius: 10px;
+  --ink: #262445;        /* text */
+  --muted: #69678A;      /* secondary text */
+  --rule: #E4E0F5;       /* borders and dividers */
+  --pen: #5B4BC4;        /* actions and links */
+  --pen-dark: #4A3BAE;
+  --pen-soft: #E6E1FB;
+  --marker: #FFE15A;     /* highlighter: evidence in CVs */
+  --tint-1: #E6E1FB; --tint-2: #D8F3E7; --tint-3: #FFE7D9; --tint-4: #DDEBFF;  /* lavender, mint, peach, sky */
+  --ok: #1F7A55;  --ok-bg: #D8F3E7;
+  --warn: #8A5A12; --warn-bg: #FFF0CF;
+  --bad: #B0414F; --bad-bg: #FCE2E6;
+  --info: #5B4BC4; --info-bg: #E6E1FB;
+  --plain-bg: #EFECF9;
+  --radius: 14px;
   --font: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
   /* names kept from the Senior 1 prototype so older markup still renders */
   --mist: var(--muted); --teal: var(--pen); --violet: var(--pen); --amber: var(--warn); --rose: var(--bad);
@@ -36,28 +39,35 @@ mark, .marked { background: linear-gradient(transparent 52%, var(--marker) 52%, 
 
 /* shell */
 .app-shell { display: grid; grid-template-columns: 236px 1fr; min-height: 100vh; }
-.sidebar { background: var(--surface); border-right: 1px solid var(--rule); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.sidebar { background: var(--side); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.sidebar::after { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; background: var(--tint-2); opacity: .7; bottom: -90px; left: -70px; pointer-events: none; }
+.sidebar-nav, .sidebar-footer, .sidebar-logo { position: relative; z-index: 1; }
 .sidebar-logo { padding: 22px 22px 18px; }
 .logo-mark { display: flex; align-items: center; gap: 10px; }
-.logo-icon { display: none; }
+.logo-icon { width: 38px; height: 38px; flex-shrink: 0; }
+.logo-icon img { width: 100%; height: 100%; display: block; }
 .logo-text { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
 .logo-text span { font-weight: 700; }
 .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .sidebar-nav { flex: 1; padding: 6px 12px; overflow-y: auto; }
 .nav-section-label { font-size: 12px; color: var(--muted); padding: 10px 10px 6px; }
-.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin: 1px 0; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 14px; }
-.nav-item:hover { background: var(--paper); }
-.nav-item.active > span:not(.nav-badge):not(.nav-icon) { background: linear-gradient(transparent 50%, var(--marker) 50%, var(--marker) 90%, transparent 90%); font-weight: 700; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 1px 0; border-radius: 9px; color: var(--ink); text-decoration: none; font-size: 14px; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.6); }
+.nav-item.active { background: var(--surface); color: var(--pen); font-weight: 700; box-shadow: 0 1px 0 var(--rule); }
 .nav-icon { display: none; }
-.nav-badge { margin-left: auto; font-size: 11px; color: var(--muted); background: var(--plain-bg) !important; border-radius: 99px; padding: 1px 7px; }
-.sidebar-footer { padding: 14px; border-top: 1px solid var(--rule); }
+.nav-badge { margin-left: auto; font-size: 11px; color: var(--muted); background: var(--surface) !important; border-radius: 99px; padding: 1px 7px; }
+.sidebar-footer { padding: 14px; }
 .user-card { display: flex; align-items: center; gap: 10px; }
-.avatar { border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+.avatar { border-radius: 50%; background: var(--pen); color: #fff; display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
 .user-name { font-size: 13px; font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .user-role { font-size: 12px; color: var(--muted); }
 .user-card button { color: var(--pen) !important; text-decoration: underline; }
 
-.main-content { min-width: 0; }
+.main-content { min-width: 0; position: relative; overflow: clip; }
+.main-content::before, .main-content::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+.main-content::before { right: -60px; top: -80px; width: 260px; height: 260px; background: var(--tint-1); opacity: .8; }
+.main-content::after { right: 150px; top: -30px; width: 90px; height: 90px; background: var(--tint-3); opacity: .9; }
+.topbar, .page-content { position: relative; z-index: 1; }
 .topbar { display: flex; align-items: center; gap: 16px; padding: 22px 36px 0; }
 .topbar-title { font-size: 14px; color: var(--muted); }
 .topbar-title span { color: var(--muted); }
@@ -77,9 +87,12 @@ mark, .marked { background: linear-gradient(transparent 52%, var(--marker) 52%, 
 .card-header > :last-child:not(:first-child) { margin-left: auto; }
 .card-body { padding: 18px; }
 
-.stat-card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 16px 18px; border-top: 3px solid var(--ink); }
+.stat-card { background: var(--tint-1); border-radius: var(--radius); padding: 16px 18px; }
+.stat-card:nth-child(4n+2) { background: var(--tint-2); }
+.stat-card:nth-child(4n+3) { background: var(--tint-3); }
+.stat-card:nth-child(4n+4) { background: var(--tint-4); }
 .stat-icon { display: none; }
-.stat-label { font-size: 13px; color: var(--muted); }
+.stat-label { font-size: 13px; color: var(--ink); opacity: .75; }
 .stat-value { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
 /* layout helpers */
@@ -98,10 +111,10 @@ mark, .marked { background: linear-gradient(transparent 52%, var(--marker) 52%, 
 .data-table th { text-align: left; font-size: 13px; font-weight: 400; color: var(--muted); padding: 10px 16px; border-bottom: 1px solid var(--rule); }
 .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--rule); font-size: 14px; vertical-align: top; }
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover td { background: #F8F9FC; }
+.data-table tbody tr:hover td { background: #FAF9FE; }
 
 /* status labels: colour plus the word itself, never colour alone */
-.badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--plain-bg); color: var(--ink); white-space: nowrap; vertical-align: middle; }
+.badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--plain-bg); color: var(--ink); white-space: nowrap; vertical-align: middle; }
 .badge-teal, .badge-sky, .badge-violet { background: var(--info-bg); color: var(--info); }
 .badge-emerald { background: var(--ok-bg); color: var(--ok); }
 .badge-amber { background: var(--warn-bg); color: var(--warn); }
@@ -109,7 +122,7 @@ mark, .marked { background: linear-gradient(transparent 52%, var(--marker) 52%, 
 .chip { display: inline-block; font-size: 12px; padding: 2px 9px; border: 1px solid var(--rule); border-radius: 99px; background: var(--surface); }
 
 /* buttons */
-.btn { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; text-decoration: none; line-height: 1.2; }
+.btn { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 9px; border: 1px solid transparent; cursor: pointer; text-decoration: none; line-height: 1.2; }
 .btn-sm { font-size: 13px; padding: 6px 11px; }
 .btn-lg { font-size: 15px; padding: 11px 18px; }
 .btn-primary { background: var(--pen); color: #fff; }
@@ -129,7 +142,7 @@ input[type=range] { accent-color: var(--pen); }
 input[type=radio], input[type=checkbox] { accent-color: var(--pen); }
 
 .progress-bar { height: 8px; background: var(--plain-bg); border-radius: 99px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--ink) !important; border-radius: 99px; }
+.progress-fill { height: 100%; background: var(--pen) !important; border-radius: 99px; }
 
 /* toasts */
 .toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 300; }
@@ -138,9 +151,9 @@ input[type=radio], input[type=checkbox] { accent-color: var(--pen); }
 .toast.success { border-left-color: #7FD3A8; }
 
 /* added for the connected version */
-.hm-modal { position: fixed; inset: 0; background: rgba(28, 34, 56, 0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.hm-modal { position: fixed; inset: 0; background: rgba(38, 36, 69, 0.4); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
 .hm-modal.open { display: flex; }
-.hm-modal-box { background: var(--surface); border-radius: 12px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; padding: 24px 26px; box-shadow: 0 20px 50px rgba(28, 34, 56, 0.25); }
+.hm-modal-box { background: var(--surface); border-radius: 16px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; padding: 24px 26px; box-shadow: 0 20px 50px rgba(38, 36, 69, 0.22); }
 .hm-empty { padding: 28px 18px; text-align: center; color: var(--muted); font-size: 14px; }
 .hm-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .hm-kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; font-size: 14px; }
@@ -150,11 +163,13 @@ input[type=radio], input[type=checkbox] { accent-color: var(--pen); }
 .hm-alert { background: var(--bad-bg); color: var(--bad); padding: 10px 12px; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
 .hm-list-item { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 16px; background: none; border: 0; border-bottom: 1px solid var(--rule); font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; text-align: left; }
 .hm-list-item:hover { background: var(--paper); }
-.hm-list-item.active span:first-child { background: linear-gradient(transparent 50%, var(--marker) 50%, var(--marker) 90%, transparent 90%); font-weight: 700; }
+.hm-list-item.active { background: var(--pen-soft); }
+.hm-list-item.active span:first-child { color: var(--pen); font-weight: 700; }
 
 @media (max-width: 900px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; }
+  .sidebar::after, .main-content::after { display: none; }
   .sidebar-nav { display: flex; flex-wrap: wrap; gap: 2px; }
   .nav-section-label { display: none; }
   .topbar, .page-content { padding-left: 16px; padding-right: 16px; }
