@@ -9,8 +9,8 @@
   "max_length": 256,
   "truncation": "longest_first",
   "padding": "max_length",
-  "review_threshold": 0.3,
-  "review_rule": "A candidate is flagged 'possible Good Fit, HR review' when P(Good Fit) >= review_threshold. The threshold was chosen on the validation split only.",
+  "review_threshold": 0.225,
+  "review_rule": "A candidate is flagged 'possible Good Fit, HR review' when P(Good Fit) >= review_threshold. Chosen on the validation split only (test results are not used for choosing): the highest threshold (step 0.025) that still flags at least half of the Good Fit pairs of the validation split. On validation 0.225 flags 34.5% of pairs and catches 56.1% of Good Fit, against 23.9% for the predicted label alone. See test-results/fit_model_report.md.",
   "recorded_results": {
     "validation_macro_f1": 46.536276922018175,
     "validation_confusion": [[475, 65, 39], [152, 102, 40], [122, 98, 69]],

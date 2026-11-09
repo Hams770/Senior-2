@@ -25,7 +25,7 @@ instead of letting the model decide.
 | Scoring engine | FR-10, FR-14, FR-15, NFR-08 | **Done**, defects D1, D2 and D3 fixed |
 | Audit log | FR-22 | **Done** for jobs, policies, staff and applications |
 | CV parser (text, sections, skills with excerpts, HR correction) | FR-06 – FR-08 | **Done** (PDF and DOCX; scanned CVs are reported, not read) |
-| Fit classifier service (BERT-Tiny from CS4085) | FR-09, NFR-10 | Next, waiting for the trained weights |
+| Fit classifier service (BERT-Tiny M0, seed 42, from CS4085), SHA-256 checked, Good Fit review flag | FR-09, NFR-10 | **Done**; reproduces the recorded CS4085 results exactly ([check](evaluation/fr09_fit/)) |
 | Skill assessments (MCQ graded by key, practical graded by HR rubric, time limit) | FR-11 – FR-13 | **Done** |
 | Provisional and final scores, ranking with breakdown, HR decisions, hiring outcome | FR-10, FR-14 – FR-16, FR-20 | **Done** |
 | Feedback drafts (anonymised; LLM if a key is set, otherwise a template) released only after HR approval | FR-17, FR-18 | **Done** |
@@ -39,6 +39,7 @@ Requires Python 3.11 or newer.
 cd backend
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install -r requirements-model.txt              # fit classifier (PyTorch, CPU); optional
 python -m app.cli create-admin admin@hiremind.test 'AdminPass123'
 uvicorn app.main:app --reload
 ```
@@ -50,7 +51,7 @@ By default the data is stored in SQLite (`backend/hiremind.db`). Settings go in 
 [`backend/.env.example`](backend/.env.example); the file is never committed): `DATABASE_URL` for PostgreSQL
 (`docker compose up -d` starts one), and `ANTHROPIC_API_KEY` to have feedback drafts written by the LLM instead of the template.
 
-**Tests:** `cd backend && pytest -q` (91 tests). On every push GitHub also runs a browser test of every screen and the
+**Tests:** `cd backend && pytest -q` (101 tests; 3 more run the real model when PyTorch is installed). On every push GitHub also runs a browser test of every screen and the
 non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are published to the `test-results` branch.
 
 ## Non-functional results (latest run)
@@ -58,7 +59,7 @@ non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are publ
 | Test | Requirement | Target | Measured |
 |---|---|---|---|
 | PT-01 | NFR-01 | Dashboard p95 ≤ 2 s (10 users, 200 requests) | p95 0.6 s, 0 errors |
-| PT-02 | NFR-02 | CV analysis p95 ≤ 120 s over 50 CVs | p95 0.11 s, 50/50 parsed (classifier not yet included) |
+| PT-02 | NFR-02 | CV analysis p95 ≤ 120 s over 50 CVs | p95 0.11 s, 50/50 parsed (see `nfr_report.md` for the run with the classifier) |
 | PT-03 | NFR-03 | 100 simultaneous applications, none lost or duplicated | 100 stored, 100 unique |
 | ST-01 | NFR-04 | No access outside role and ownership | 22 protected endpoints × anonymous / wrong role / other HR refused; forged, expired and tampered tokens refused |
 | RT-01 | NFR-06 | Retries ≤ 2, invalid files rejected, data survives a restart | Passed |
@@ -77,7 +78,20 @@ non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are publ
 
 The score is the weighted mean of the components that have evidence, using the job's latest policy.
 It is *provisional* while any weighted component is not assessed and *final* when all are present.
-The fit classifier (FR-09) will be shown beside the score as extra evidence once its weights are added.
+## The fit classifier (FR-09)
+
+The CS4085 model M0 (BERT-Tiny, seed 42, [`backend/models/`](backend/models/)) reads the CV text and the job text together
+and gives P(No Fit), P(Potential Fit) and P(Good Fit). HR sees these in the Candidates screen **as evidence only: they are
+not part of the score and never reject anyone.**
+
+- **Integrity:** the weights are loaded only if their SHA-256 matches [`fit_model.json`](backend/models/fit_model.json).
+- **Same model as the paper:** CI runs the platform's own code on the frozen CS4085 splits; it reproduces validation
+  macro-F1 46.54% (identical confusion matrix) and test macro-F1 37.89% / Good Fit recall 15.07% (seed 42).
+- **Good Fit review flag:** the model misses most Good Fit pairs, so a candidate with P(Good Fit) ≥ 0.225 is flagged
+  "possible Good Fit · review". The threshold was chosen on validation only (the highest that still catches half of the
+  Good Fit pairs: 56% caught, 34.5% of candidates flagged, against 24% for the predicted label alone).
+- **Optional (NFR-10):** without `requirements-model.txt`, or with wrong weights, the platform works and says why the
+  classifier is unavailable. The first run downloads the pinned tokenizer from Hugging Face (about 1 MB).
 
 ## Main API endpoints
 
@@ -110,6 +124,8 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 | `POST /api/feedback/{id}/approve`, `/release` | HR (owner) | Approve (or edit) the draft, then release it |
 | `GET /api/applications/{id}/feedback` | HR (owner) or the candidate | Candidates see only released feedback |
 | `POST /api/scoring/preview` | HR | Score for given components and weights |
+| `GET /api/applications/{id}/fit`, `POST …/fit` | HR (owner) | Fit prediction, or run it again |
+| `GET /api/model/status` | HR | Is the classifier loaded, and if not why |
 | `GET /api/audit` | admin | Audit log |
 
 ## Structure
@@ -118,16 +134,18 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 frontend/              screens (HTML, CSS, JavaScript): sign-in, 10 HR screens, candidate portal
 e2e/                   browser test that walks every screen and saves screenshots
 nfr/                   load, concurrency and restart tests
-evaluation/            kits for the tests that need people: UT-01 usability, AT-01 skill extraction accuracy
+evaluation/            FR-09 model check; kits for the tests that need people: UT-01 usability, AT-01 skill extraction accuracy
 backend/app/
   main.py              FastAPI application
   models.py            database tables (one per entity of the ERD)
   security.py          password hashing, tokens, role checks
   parser.py, skills.py CV parser and skill vocabulary
   scoring.py           scoring engine (D1-D3 fixed)
+  fit_model.py         fit classifier service (FR-09)
   audit.py             audit log
   feedback_writer.py   anonymised feedback drafts (LLM or template)
   routers/             auth, jobs, applications, assessments, evaluations, feedback, admin endpoints
+backend/models/        M0 weights (seed 42) and model card
 backend/tests/         automated tests (TC-01 to TC-08, TC-10 to TC-18, TC-20, D1-D5, ST-01, NFR-08, FR-22)
 docker-compose.yml     local PostgreSQL
 ```
