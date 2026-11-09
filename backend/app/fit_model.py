@@ -82,7 +82,7 @@ class _TorchBackend:
 
 
 _lock = threading.Lock()
-_state: dict = {"backend": None, "error": None, "failed_at": 0.0}
+_state: dict = {"backend": None, "error": None, "failed_at": None}
 
 
 def _weights_path() -> Path:
@@ -111,7 +111,8 @@ def _backend():
         _state["error"] = "Disabled by FIT_MODEL=off"
         return None
     with _lock:
-        if _state["backend"] is None and time.monotonic() - _state["failed_at"] > RETRY_AFTER_S:
+        failed_at = _state["failed_at"]
+        if _state["backend"] is None and (failed_at is None or time.monotonic() - failed_at > RETRY_AFTER_S):
             try:
                 started = time.perf_counter()
                 _state["backend"], _state["error"] = _load(), None
@@ -124,11 +125,11 @@ def _backend():
 
 def set_backend(fn) -> None:
     """Tests: replace the model with a function (list of (cv, job) pairs -> list of probability lists)."""
-    _state.update(backend=fn, error=None, failed_at=0.0)
+    _state.update(backend=fn, error=None, failed_at=None)
 
 
 def reset() -> None:
-    _state.update(backend=None, error=None, failed_at=0.0)
+    _state.update(backend=None, error=None, failed_at=None)
 
 
 def status() -> dict:
