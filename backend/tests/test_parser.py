@@ -90,3 +90,11 @@ def test_correction_keeps_parser_original(client):
     assert r["original_text"] == r["text"]                 # text not changed, original kept
     log = client.get("/api/audit", headers=login(client, "admin@hm.test")).json()
     assert any(e["action"] == "correct_cv" and e["detail"]["reason"] == "Remove weak matches" for e in log)
+
+
+def test_skill_split_across_lines_and_languages_section():
+    lines = ["Summary", "Built models with machine", "learning for churn prediction in retail stores. " * 3,
+             "Languages", "Arabic (native), English (fluent)"]
+    found = {s["skill"]: s for s in parse_cv(make_pdf(lines), ".pdf").skills}
+    assert {"machine learning", "arabic", "english"} <= set(found)
+    assert "\n" not in found["machine learning"]["source_excerpt"]

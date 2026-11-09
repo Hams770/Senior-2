@@ -78,7 +78,9 @@ def split_sections(text: str) -> dict[str, str]:
 
 def _pattern(term: str) -> re.Pattern:
     # word boundaries that also work for terms such as c++, c#, .net and node.js
-    return re.compile(r"(?<![\w+#.])" + re.escape(term) + r"(?![\w+#])", re.IGNORECASE)
+    # a space in a skill name also matches a line break, so "machine\nlearning" from a PDF still counts
+    body = r"\s+".join(re.escape(part) for part in term.split())
+    return re.compile(r"(?<![\w+#.])" + body + r"(?![\w+#])", re.IGNORECASE)
 
 
 def _excerpt(text: str, start: int, end: int) -> str:
@@ -86,7 +88,7 @@ def _excerpt(text: str, start: int, end: int) -> str:
     left = max(text.rfind("\n", 0, start), text.rfind(". ", 0, start)) + 1
     right_candidates = [i for i in (text.find("\n", end), text.find(". ", end)) if i != -1]
     right = min(right_candidates) if right_candidates else len(text)
-    snippet = text[left:right].strip()
+    snippet = re.sub(r"\s+", " ", text[left:right]).strip()
     if len(snippet) > EXCERPT_CHARS:
         mid = start - left
         lo = max(0, mid - EXCERPT_CHARS // 2)
@@ -108,7 +110,7 @@ def extract_skills(sections: dict[str, str], extra_skills: list[str] = ()) -> li
             if not text:
                 continue
             for spelling in sorted(set(spellings), key=len, reverse=True):
-                if spelling in CONTEXT_ONLY and sec != "skills":
+                if spelling in CONTEXT_ONLY and sec not in ("skills", "languages"):
                     continue
                 m = _pattern(spelling).search(text)
                 if m:
