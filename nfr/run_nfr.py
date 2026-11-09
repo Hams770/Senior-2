@@ -76,9 +76,11 @@ def load():
         app_id = r.json()["id"]
         c.put(f"/api/applications/{app_id}/ratings", headers=hr, json={"exp": 60 + i % 30, "edu": 70, "soft": 65})
         c.post(f"/api/applications/{app_id}/evaluate", headers=hr)
-    parsed = sum(1 for x in c.get(f"/api/jobs/{jobs[0]}/candidates", headers=hr).json() if x["parse_status"] == "parsed")
+    rows = c.get(f"/api/jobs/{jobs[0]}/candidates", headers=hr).json()
+    parsed = sum(1 for x in rows if x["parse_status"] == "parsed")
+    fitted = sum(1 for x in rows if x.get("fit"))  # FR-09: analysis includes the fit classifier when it is installed
     report["PT-02"] = {"cvs": 50, "p95_s": round(p95(times), 3), "max_s": round(max(times), 3), "target_s": 120,
-                       "parsed": parsed, "pass": p95(times) <= 120 and all(s == 201 for s in statuses) and parsed == 50}
+                       "parsed": parsed, "fit_predictions": fitted, "pass": p95(times) <= 120 and all(s == 201 for s in statuses) and parsed == 50}
 
     # PT-01: 10 users x 20 dashboard requests
     paths = ["/api/analytics", "/api/jobs", f"/api/jobs/{jobs[0]}/candidates", f"/api/jobs/{jobs[0]}/ranking"]
@@ -128,7 +130,7 @@ def persist():
     report = state["report"]
     report["RT-01"] = {"before_restart": state["counts"], "after_restart": now, "pass": now == state["counts"]}
     rows = [("PT-01", "NFR-01", "Dashboard p95 ≤ 2 s, 10 users, 200 requests", f"p95 {report['PT-01']['p95_ms']} ms, {report['PT-01']['errors']} errors"),
-            ("PT-02", "NFR-02", "CV analysis p95 ≤ 120 s over 50 CVs", f"p95 {report['PT-02']['p95_s']} s, {report['PT-02']['parsed']}/50 parsed"),
+            ("PT-02", "NFR-02", "CV analysis p95 ≤ 120 s over 50 CVs", f"p95 {report['PT-02']['p95_s']} s, {report['PT-02']['parsed']}/50 parsed, {report['PT-02']['fit_predictions']}/50 with a fit prediction"),
             ("PT-03", "NFR-03", "100 simultaneous applications, none lost or duplicated", f"{report['PT-03']['stored']} stored, {report['PT-03']['unique']} unique"),
             ("RP-01", "NFR-08", "Same inputs and policy give the same score", f"{report['RP-01']['distinct_scores']} distinct score in 5 runs"),
             ("RT-01", "NFR-06", "Data survives a server restart", f"{sum(now.values())} applications before and after")]

@@ -5,21 +5,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import config, models  # noqa: F401  (registers the tables)
+import threading
+
+from . import config, fit_model, models  # noqa: F401  (registers the tables)
 from .db import Base, engine
-from .routers import admin, applications, assessments, auth, evaluations, feedback, jobs, views
+from .routers import admin, applications, assessments, auth, evaluations, feedback, fit, jobs, views
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
+    if config.FIT_ENABLED:  # load the classifier in the background so the first application does not wait
+        threading.Thread(target=fit_model.status, daemon=True).start()
     yield
 
 
 app = FastAPI(title="HireMind Intelligence Platform API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5500", "http://127.0.0.1:5500"],
                    allow_methods=["*"], allow_headers=["*"])
-for r in (auth.router, jobs.router, applications.router, assessments.router, evaluations.router, feedback.router, views.router, admin.router):
+for r in (auth.router, jobs.router, applications.router, assessments.router, evaluations.router, feedback.router, fit.router, views.router, admin.router):
     app.include_router(r)
 
 

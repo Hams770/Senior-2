@@ -34,6 +34,7 @@ startPage('Dashboard', '', ['hr', 'admin'], async body => {
       ${todo(toGrade, 'practical answers are waiting for rubric grading', 'verification.html')}
       ${todo((a.evaluations.evaluated || 0) - (a.evaluations.final || 0), 'evaluations are still provisional (evidence missing)', 'candidates.html')}
       ${todo(a.application_status.submitted || 0, 'new applications have not been assessed yet', 'candidates.html')}
+      ${todo((a.fit && a.fit.flagged_for_review) || 0, 'candidates are flagged as a possible Good Fit by the model: read their CVs', 'candidates.html')}
     </div></div>
     <div class="card"><div class="card-header"><span class="card-title">Jobs</span><a href="analytics.html" class="btn btn-ghost btn-sm">Open analytics</a></div>
       ${a.per_job.length ? `<table class="data-table"><thead><tr><th>Job</th><th>Status</th><th>Applications</th><th>Mean score</th></tr></thead><tbody>

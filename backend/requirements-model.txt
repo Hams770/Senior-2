@@ -1,0 +1,4 @@
+# Fit classifier (FR-09), optional: without these the platform runs and shows the classifier as unavailable.
+# CPU build of PyTorch is enough (the model has 4.4 M parameters).
+torch>=2.2
+transformers==4.51.3

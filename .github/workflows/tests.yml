@@ -32,6 +32,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r backend/requirements.txt playwright==1.49.1 && python -m playwright install --with-deps chromium
+      - name: Install the fit classifier (CPU PyTorch)
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r backend/requirements-model.txt
+      - name: Real-model tests (FR-09)
+        working-directory: backend
+        run: pytest -q -s tests/test_fit_model.py
       - name: Start a server on an empty SQLite database (browser test)
         working-directory: backend
         run: |
@@ -39,6 +44,11 @@ jobs:
           nohup uvicorn app.main:app --port 8000 > ../server.log 2>&1 &
           sleep 4 && curl -sf http://127.0.0.1:8000/api/health
       - run: python e2e/run_e2e.py
+      - name: FR-09 integration check against the CS4085 results
+        run: |
+          git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
+          pip install pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2
+          python evaluation/fr09_fit/verify_fit_model.py --dl ../HireMind-DL
       - name: Usability kit seeds the platform
         run: python evaluation/ut01_usability/seed_usability.py --admin admin@hiremind.test --password 'AdminPass123'
       - name: Extraction kit downloads and prepares 3 CVs

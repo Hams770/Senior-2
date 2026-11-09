@@ -68,6 +68,16 @@ function statusBadge(s) {
   return `<span class="badge ${map[s] || 'badge-sky'}">${esc(String(s || '—').replace('_', ' '))}</span>`;
 }
 
+// FR-09 fit prediction: the model's label (neutral, it is evidence, not a decision) and the review flag
+function fitCell(f) {
+  if (!f) return '<span class="hm-note">—</span>';
+  return `<span class="badge">${esc(f.label)}</span>${f.needs_hr_review && f.label !== 'Good Fit' ? ' <span class="badge badge-amber" title="P(Good Fit) reached the review threshold">possible Good Fit · review</span>' : ''}`;
+}
+function fitBars(f) {
+  return Object.entries(f.probabilities).map(([k, v]) => `<div style="display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:13px;padding:3px 0">
+    <span>${esc(k)}</span><div class="progress-bar"><div class="progress-fill" style="width:${(100 * v).toFixed(1)}%"></div></div><span style="text-align:right">${Math.round(100 * v)}%</span></div>`).join('');
+}
+
 // Job picker shared by the HR screens; remembers the last job chosen
 async function jobPicker(containerId, onChange) {
   const jobs = await api('/api/jobs');

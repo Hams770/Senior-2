@@ -115,6 +115,9 @@ def main():
         # interactions: review a candidate, mark the practical answer, screening of the scanned CV
         page.goto(BASE + "/candidates.html"); page.wait_for_load_state("networkidle")
         page.get_by_role("button", name="Review", exact=True).first.click(); page.wait_for_timeout(500)
+        # FR-09: with the classifier installed (CI installs it) the review shows the model's probabilities
+        if httpx.get(BASE + "/api/model/status", headers=login(httpx.Client(base_url=BASE), "noura@hiremind.test", "HrPass1234")).json()["available"]:
+            assert page.locator("#fit .progress-bar").count() == 3, "fit probabilities are not shown"
         shot(page, "hr_candidates_review")
         # ratings typed with Arabic-Indic digits, then evaluate and decide through the buttons
         for k, v in (("exp", "٨٠"), ("edu", "٨٥"), ("soft", "75")):

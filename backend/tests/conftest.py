@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app import config
+from app import config, fit_model
 from app.db import Base, get_db
 from app.main import app
 from app.models import User
@@ -14,6 +14,15 @@ from app.security import hash_password
 
 PDF = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
 DOCX = b"PK\x03\x04" + b"\x00" * 100
+
+
+@pytest.fixture(autouse=True)
+def no_real_classifier(monkeypatch):
+    """Unit tests never load PyTorch; test_fit.py installs a fake model and test_fit_model.py the real one."""
+    monkeypatch.setattr(config, "FIT_ENABLED", False)
+    fit_model.reset()
+    yield
+    fit_model.reset()
 
 
 @pytest.fixture()
