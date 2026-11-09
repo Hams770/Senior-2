@@ -29,4 +29,5 @@ FRONTEND_DIR = BASE_DIR.parent / "frontend"
 # Feedback drafts (FR-17). Without a key the drafts come from a fixed template.
 LLM_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
+LLM_WORKSPACE_ID = os.getenv("ANTHROPIC_WORKSPACE_ID", "")  # only for keys not scoped to a workspace
 LLM_TIMEOUT_S = float(os.getenv("LLM_TIMEOUT_S", "30"))
