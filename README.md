@@ -8,6 +8,12 @@ HireMind helps HR teams screen CVs for a job, verify claimed skills with short a
 candidates with a transparent, HR-weighted score. The AI only supplies evidence: **HR makes every
 decision, and the system never rejects a candidate automatically.**
 
+**The fit classifier** (No Fit / Potential Fit / Good Fit) comes from our CS4085 Deep Learning project:
+[github.com/Hams770/HireMind-DL](https://github.com/Hams770/HireMind-DL). That repository holds the dataset
+splits, training and evaluation code, and the held-out test results (BERT-Tiny M0: macro-F1 33.70%,
+Good Fit recall 16.16%). The low Good Fit recall is why the platform flags possible Good Fit candidates for HR review
+instead of letting the model decide.
+
 ## Status
 
 | Part | Requirements | Status |
