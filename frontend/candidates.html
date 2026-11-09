@@ -73,7 +73,7 @@ async function review(id) {
 }
 function fitHTML(f) {
   return `${fitBars(f)}
-    ${f.needs_hr_review ? '<div class="hm-alert" style="background:var(--warn-bg);color:var(--warn);margin:8px 0 0">Possible Good Fit: the model often labels Good Fit candidates as No Fit, so read this CV yourself before deciding.</div>' : ''}
+    ${f.needs_hr_review && f.label !== 'Good Fit' ? '<div class="hm-alert" style="background:var(--warn-bg);color:var(--warn);margin:8px 0 0">Possible Good Fit: P(Good Fit) reached the review threshold. The model often labels Good Fit candidates as No Fit, so read this CV yourself before deciding.</div>' : ''}
     <div class="hm-note" style="margin-top:6px">Model ${esc(f.model_version)} · ${fmtDate(f.created_at)}</div>`;
 }
 async function rerunFit(id) {

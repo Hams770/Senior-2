@@ -71,7 +71,7 @@ function statusBadge(s) {
 // FR-09 fit prediction: the model's label (neutral, it is evidence, not a decision) and the review flag
 function fitCell(f) {
   if (!f) return '<span class="hm-note">—</span>';
-  return `<span class="badge">${esc(f.label)}</span>${f.needs_hr_review ? ' <span class="badge badge-amber" title="P(Good Fit) reached the review threshold">possible Good Fit · review</span>' : ''}`;
+  return `<span class="badge">${esc(f.label)}</span>${f.needs_hr_review && f.label !== 'Good Fit' ? ' <span class="badge badge-amber" title="P(Good Fit) reached the review threshold">possible Good Fit · review</span>' : ''}`;
 }
 function fitBars(f) {
   return Object.entries(f.probabilities).map(([k, v]) => `<div style="display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:13px;padding:3px 0">
