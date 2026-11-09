@@ -7,3 +7,7 @@ backend/uploads/
 .env
 .DS_Store
 test-results/
+evaluation/at01_extraction/cvs/
+evaluation/at01_extraction/AT-01_annotation.xlsx
+evaluation/at01_extraction/AT-01_report.md
+evaluation/ut01_usability/sample_cv.pdf

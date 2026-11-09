@@ -64,8 +64,8 @@ non-functional tests on PostgreSQL; the screenshots and `nfr_report.md` are publ
 | RT-01 | NFR-06 | Retries ≤ 2, invalid files rejected, data survives a restart | Passed |
 | RP-01 | NFR-08 | Same inputs and policy give the same score | Passed |
 | FT-01 | NFR-09 | 10 CV pairs differing in an irrelevant attribute | 0 differences in skills or score |
-| UT-01 | NFR-05 | 4 of 5 users finish a task in 5 minutes, SUS reported | To do with real participants |
-| AT-01 | NFR-07 | Skill extraction micro-F1 ≥ 0.85 on 30 annotated CVs | To do with real CVs |
+| UT-01 | NFR-05 | 4 of 5 users finish a task in 5 minutes, SUS reported | To do with real participants ([kit](evaluation/ut01_usability/)) |
+| AT-01 | NFR-07 | Skill extraction micro-F1 ≥ 0.85 on 30 annotated CVs | To do: team annotation ([kit](evaluation/at01_extraction/)) |
 
 ## How a candidate is scored
 
@@ -118,6 +118,7 @@ The fit classifier (FR-09) will be shown beside the score as extra evidence once
 frontend/              screens (HTML, CSS, JavaScript): sign-in, 10 HR screens, candidate portal
 e2e/                   browser test that walks every screen and saves screenshots
 nfr/                   load, concurrency and restart tests
+evaluation/            kits for the tests that need people: UT-01 usability, AT-01 skill extraction accuracy
 backend/app/
   main.py              FastAPI application
   models.py            database tables (one per entity of the ERD)
