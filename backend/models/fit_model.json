@@ -1,0 +1,21 @@
+{
+  "_comment": "FR-09 fit classifier. Weights from the CS4085 Deep Learning project (github.com/Hams770/HireMind-DL), frozen deployment seed 42. The platform refuses to load a weights file whose SHA-256 differs from the value below.",
+  "name": "M0_s42_lr0.0001",
+  "weights_file": "M0_s42_lr0.0001.pt",
+  "weights_sha256": "6ac7862edea03cba6c9f7854c45f7c7fc470b0c54518ebb8791f571f08997d71",
+  "base_model": "google/bert_uncased_L-2_H-128_A-2",
+  "base_revision": "30b0a37ccaaa32f332884b96992754e246e48c5f",
+  "labels": ["No Fit", "Potential Fit", "Good Fit"],
+  "max_length": 256,
+  "truncation": "longest_first",
+  "padding": "max_length",
+  "review_threshold": 0.3,
+  "review_rule": "A candidate is flagged 'possible Good Fit, HR review' when P(Good Fit) >= review_threshold. The threshold was chosen on the validation split only.",
+  "recorded_results": {
+    "validation_macro_f1": 46.536276922018175,
+    "validation_confusion": [[475, 65, 39], [152, 102, 40], [122, 98, 69]],
+    "test_macro_f1": 37.892486687401004,
+    "test_accuracy": 46.333143831722566,
+    "test_good_fit_recall": 15.065502183406112
+  }
+}

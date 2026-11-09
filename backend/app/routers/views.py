@@ -8,6 +8,7 @@ from ..models import Application, AssessmentAttempt, Decision, Feedback, Job, Us
 from ..security import DB, CandidateUser, HRUser
 from .assessments import attempt_view
 from .evaluations import latest_evaluation
+from .fit import fit_view, latest_fit
 from .jobs import owned_job
 
 router = APIRouter(prefix="/api", tags=["screens"])
@@ -34,7 +35,7 @@ def job_candidates(job_id: int, user: HRUser, db: DB):
                     "skills": [s.skill for s in app.cv.skills if s.active] if app.cv else [],
                     "hr_ratings": app.hr_ratings, "score": ev.score if ev else None,
                     "stage": ev.stage if ev else None, "decision": d.outcome if d else None,
-                    "final_outcome": app.final_outcome})
+                    "final_outcome": app.final_outcome, "fit": fit_view(latest_fit(db, app.id))})
     return out
 
 
@@ -77,6 +78,7 @@ def analytics(user: HRUser, db: DB):
     evs = [e for e in (latest_evaluation(db, a) for a in app_ids) if e]
     decisions = db.scalars(select(Decision).where(Decision.application_id.in_(app_ids))).all() if app_ids else []
     attempts = db.scalars(select(AssessmentAttempt).where(AssessmentAttempt.application_id.in_(app_ids))).all() if app_ids else []
+    fits = [f for f in (latest_fit(db, a) for a in app_ids) if f]
     skill_counts = Counter(s.skill for a in apps if a.cv for s in a.cv.skills if s.active)
     per_job = []
     for j in jobs:
@@ -96,6 +98,8 @@ def analytics(user: HRUser, db: DB):
                         "histogram": [sum(lo <= s < lo + 20 or (lo == 80 and s == 100) for s in scores) for lo in range(0, 100, 20)]},
         "decisions": dict(Counter(d.outcome for d in decisions)),
         "assessments": dict(Counter(t.status for t in attempts)),
+        "fit": {"predicted": len(fits), "flagged_for_review": sum(f.needs_hr_review for f in fits),
+                "labels": dict(Counter(fit_view(f)["label"] for f in fits))},
         "top_skills": skill_counts.most_common(10),
         "per_job": per_job,
     }

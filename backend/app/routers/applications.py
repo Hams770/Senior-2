@@ -53,7 +53,9 @@ async def apply(job_id: int, user: CandidateUser, db: DB, cv: Annotated[UploadFi
     db.add(doc)
     db.flush()
     run_parser(db, doc, data, ext, job.required_skills)
-    audit.log(db, user.id, "apply", "application", app.id, job_id=job_id, parse_status=doc.parse_status)
+    fit = run_fit(db, app, doc)  # FR-09; skipped without CV text or without the classifier
+    audit.log(db, user.id, "apply", "application", app.id, job_id=job_id, parse_status=doc.parse_status,
+              fit_prediction=fit is not None)
     db.commit()
     return app
 
@@ -71,6 +73,11 @@ def run_parser(db, doc: CVDocument, data: bytes, ext: str, required_skills: list
     doc.extracted_text, doc.sections = parsed.text, parsed.sections
     for s in parsed.skills:
         db.add(ExtractedSkill(cv_id=doc.id, skill=s["skill"], source_excerpt=s["source_excerpt"], section=s["section"]))
+
+
+def run_fit(db, app, doc):
+    from .fit import run_fit as _run  # imported here: fit.py imports this module
+    return _run(db, app, doc)
 
 
 def hr_application(db, app_id: int, user) -> Application:
@@ -103,6 +110,7 @@ def reparse(app_id: int, user: HRUser, db: DB):
         raise HTTPException(409, "HR corrected this CV; re-parsing would hide the correction")
     data = Path(doc.file_path).read_bytes()
     run_parser(db, doc, data, Path(doc.file_path).suffix, db.get(Job, app.job_id).required_skills)
+    run_fit(db, app, doc)
     audit.log(db, user.id, "reparse_cv", "application", app.id, parse_status=doc.parse_status)
     db.commit()
     return parsed_view(db, app)
@@ -127,6 +135,8 @@ def correct_parsed(app_id: int, body: CorrectionIn, user: HRUser, db: DB):
             db.add(ExtractedSkill(cv_id=doc.id, skill=s.skill.strip().lower(), source_excerpt=s.source_excerpt,
                                   section="hr", origin="hr"))
     doc.parse_status = "corrected"
+    if body.text is not None:
+        run_fit(db, app, doc)  # the classifier reads the corrected text
     audit.log(db, user.id, "correct_cv", "application", app.id, reason=body.reason,
               text_changed=body.text is not None, skills=[s.skill for s in body.skills or []])
     db.commit()

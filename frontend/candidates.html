@@ -16,16 +16,21 @@ startPage('Candidates', '', ['hr', 'admin'], async body => {
   body.innerHTML = `<div class="section-header mb-24"><div><div class="section-title">Applicants</div>
     <div class="section-subtitle">Rate the evidence, evaluate, then record your decision. The system never decides for you.</div></div>
     <div id="picker" style="margin-left:auto"></div></div>
+    <div id="fit-status"></div>
     <div class="card"><div id="list"></div></div>`;
+  api('/api/model/status').then(st => {
+    if (!st.available) document.getElementById('fit-status').innerHTML =
+      `<div class="hm-note mb-16">Fit classifier not available, so the Fit column stays empty: ${esc(st.reason || '')}</div>`;
+  }).catch(() => {});
   await jobPicker('picker', id => { JOB = id; load(); });
 });
 let JOB, ROWS = [];
 async function load() {
   ROWS = await api(`/api/jobs/${JOB}/candidates`);
   document.getElementById('list').innerHTML = ROWS.length ? `<table class="data-table"><thead><tr>
-    <th>Candidate</th><th>Applied</th><th>CV</th><th>Score</th><th>Status</th><th>Decision</th><th></th></tr></thead><tbody>
+    <th>Candidate</th><th>Applied</th><th>CV</th><th>Fit (model)</th><th>Score</th><th>Status</th><th>Decision</th><th></th></tr></thead><tbody>
     ${ROWS.map(r => `<tr><td><strong>${esc(r.candidate)}</strong><div class="hm-note">${esc(r.email)}</div></td>
-      <td>${fmtDate(r.applied_at)}</td><td>${statusBadge(r.parse_status)}</td>
+      <td>${fmtDate(r.applied_at)}</td><td>${statusBadge(r.parse_status)}</td><td>${fitCell(r.fit)}</td>
       <td>${r.score === null ? '—' : `<strong>${fmtScore(r.score)}</strong> ${statusBadge(r.stage)}`}</td>
       <td>${statusBadge(r.status)}</td><td>${r.decision ? statusBadge(r.decision) : '—'}</td>
       <td><div class="hm-row-actions">
@@ -48,6 +53,10 @@ async function review(id) {
     <input class="form-input" type="text" inputmode="decimal" id="r-${k}" value="${r.hr_ratings[k] ?? ''}" placeholder="not rated"></div>`;
   modal(`<div class="section-title mb-8">${esc(r.candidate)}</div>
     <div class="hm-note mb-16">Skills found in the CV: ${r.skills.map(esc).join(', ') || 'none (see CV Screening)'}</div>
+    <div class="card mb-16" style="padding:14px 16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <strong style="font-size:14px">Fit classifier</strong><span class="hm-note">evidence only, not part of the score</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="rerunFit(${id})">Run again</button></div>
+      <div id="fit">${r.fit ? fitHTML(r.fit) : '<div class="hm-note">No prediction yet (no CV text, or the classifier is not installed).</div>'}</div></div>
     <div class="grid grid-3 gap-16">${rate('exp')}${rate('edu')}${rate('soft')}</div>
     <div style="display:flex;gap:8px;margin-bottom:18px">
       <button class="btn btn-ghost btn-sm" onclick="saveRatings(${id})">Save ratings</button>
@@ -61,6 +70,15 @@ async function review(id) {
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="recordDecision(${id})">Record decision</button>
       ${r.decision === 'advance' ? `<button class="btn btn-ghost btn-sm" onclick="recordOutcome(${id},'hired')">Mark hired</button>` : ''}
       ${r.decision ? `<button class="btn btn-ghost btn-sm" onclick="recordOutcome(${id},'not_hired')">Mark not hired</button>` : ''}</div>`}`);
+}
+function fitHTML(f) {
+  return `${fitBars(f)}
+    ${f.needs_hr_review ? '<div class="hm-alert" style="background:var(--warn-bg);color:var(--warn);margin:8px 0 0">Possible Good Fit: the model often labels Good Fit candidates as No Fit, so read this CV yourself before deciding.</div>' : ''}
+    <div class="hm-note" style="margin-top:6px">Model ${esc(f.model_version)} · ${fmtDate(f.created_at)}</div>`;
+}
+async function rerunFit(id) {
+  const res = await act(() => api(`/api/applications/${id}/fit`, { method: 'POST' }), 'Fit prediction updated');
+  if (res) { document.getElementById('fit').innerHTML = fitHTML(res.prediction); load(); }
 }
 function evalHTML(ev) {
   const names = { tech: 'Technical skills match', exp: 'Experience', edu: 'Education', soft: 'Soft skills', ver: 'Skill assessments' };

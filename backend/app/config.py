@@ -26,6 +26,11 @@ MAX_CV_BYTES = 10 * 1024 * 1024  # FR-05: at most 10 MB
 ALLOWED_CV_TYPES = {".pdf": b"%PDF", ".docx": b"PK\x03\x04"}  # D5: PDF and DOCX only
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 
+# Fit classifier (FR-09). Needs requirements-model.txt; the first run downloads the pinned tokenizer (~1 MB).
+MODEL_DIR = BASE_DIR / "models"
+FIT_ENABLED = os.getenv("FIT_MODEL", "on").lower() != "off"
+FIT_WEIGHTS = Path(os.environ["FIT_WEIGHTS"]) if os.getenv("FIT_WEIGHTS") else None  # default: models/<card file>
+
 # Feedback drafts (FR-17). Without a key the drafts come from a fixed template.
 LLM_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
