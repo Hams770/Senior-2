@@ -39,6 +39,13 @@ jobs:
           nohup uvicorn app.main:app --port 8000 > ../server.log 2>&1 &
           sleep 4 && curl -sf http://127.0.0.1:8000/api/health
       - run: python e2e/run_e2e.py
+      - name: Usability kit seeds the platform
+        run: python evaluation/ut01_usability/seed_usability.py --admin admin@hiremind.test --password 'AdminPass123'
+      - name: Extraction kit downloads and prepares 3 CVs
+        run: |
+          pip install huggingface_hub==0.30.2 pandas==2.2.3 openpyxl==3.1.5
+          python evaluation/at01_extraction/select_cvs.py --per-label 1
+          ls evaluation/at01_extraction/cvs
       - name: Start a server on PostgreSQL (non-functional tests)
         working-directory: backend
         env: { DATABASE_URL: "postgresql+psycopg2://hiremind:hiremind@localhost:5432/hiremind", UPLOAD_DIR: /tmp/uploads-pg }
