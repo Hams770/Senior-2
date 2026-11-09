@@ -3,11 +3,14 @@
 With ANTHROPIC_API_KEY set, the draft comes from the LLM using the prompt in the midterm report (Appendix C);
 otherwise, or if the call fails, a fixed template writes it. Either way HR edits and approves it (FR-18).
 """
+import logging
 import re
 
 import httpx
 
 from . import config
+
+log = logging.getLogger("hiremind.feedback")
 
 PROMPT = """You are helping an HR manager write feedback to a job applicant.
 Write 120 to 180 words in a respectful, specific, and constructive tone.
@@ -70,9 +73,10 @@ MAX_RETRIES = 2  # NFR-06: a failed call is retried at most twice
 
 
 def _call_llm(summary: dict) -> str:
-    r = httpx.post("https://api.anthropic.com/v1/messages", timeout=config.LLM_TIMEOUT_S,
-                   headers={"x-api-key": config.LLM_API_KEY, "anthropic-version": "2023-06-01",
-                            "content-type": "application/json"},
+    headers = {"x-api-key": config.LLM_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"}
+    if config.LLM_WORKSPACE_ID:
+        headers["anthropic-workspace-id"] = config.LLM_WORKSPACE_ID
+    r = httpx.post("https://api.anthropic.com/v1/messages", timeout=config.LLM_TIMEOUT_S, headers=headers,
                    json={"model": config.LLM_MODEL, "max_tokens": 600,
                          "messages": [{"role": "user", "content": fill(summary)}]})
     r.raise_for_status()
@@ -88,8 +92,10 @@ def write_draft(summary: dict) -> tuple[str, str, str]:
                 if text:
                     return redact(text), "llm", config.LLM_MODEL
             except httpx.HTTPStatusError as e:
+                log.warning("LLM call failed (%s): %s", e.response.status_code, e.response.text[:300])
                 if e.response.status_code < 500 and e.response.status_code != 429:
-                    break  # a request error (bad key, bad input) will not succeed on retry
-            except (httpx.HTTPError, ValueError, KeyError):
-                pass
+                    break  # a request error (bad key, no credit, missing workspace) will not succeed on retry
+            except (httpx.HTTPError, ValueError, KeyError) as e:
+                log.warning("LLM call failed: %s", e)
+        log.warning("Using the template for this feedback draft")
     return template_draft(summary), "template", ""  # fall back instead of failing the request
