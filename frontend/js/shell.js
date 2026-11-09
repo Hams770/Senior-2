@@ -28,8 +28,8 @@ function renderShell(pageTitle, pageSubtitle = '') {
   shell.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="sidebar-logo"><div class="logo-mark"><div class="logo-icon">🧠</div>
-          <div><div class="logo-text">Hire<span>Mind</span></div><div class="tagline">AI-assisted, HR-led recruitment</div></div></div></div>
+        <div class="sidebar-logo"><div class="logo-mark"><div class="logo-icon"><img src="img/logo.svg" alt=""></div>
+          <div><div class="logo-text">HireMind</div><div class="tagline">AI-assisted, HR-led recruitment</div></div></div></div>
         <nav class="sidebar-nav"><div class="nav-section-label">${role === 'candidate' ? 'Candidate' : 'Platform'}</div>${navHTML}</nav>
         <div class="sidebar-footer"><div class="user-card">
           <div class="avatar" style="width:34px;height:34px;font-size:13px">${esc(initials)}</div>
