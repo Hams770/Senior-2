@@ -48,6 +48,15 @@ async function requireUser(roles) {
 
 function logout() { Auth.token = null; location.href = 'login.html'; }
 
+// Accepts Arabic-Indic (٠-٩) and Persian (۰-۹) digits and the Arabic decimal comma; empty -> null
+function toNumber(v) {
+  const t = String(v ?? '').trim()
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0))
+    .replace(/[٫,]/g, '.');
+  return t === '' ? null : Number(t);
+}
+
 function fmtScore(s) { return s === null || s === undefined ? '—' : Math.round(s); }
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
 function statusBadge(s) {

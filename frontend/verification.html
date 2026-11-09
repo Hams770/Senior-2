@@ -45,7 +45,7 @@ function newTest() {
     <div class="grid grid-3 gap-16">
       <div class="form-group"><label class="form-label">Skill</label><select class="form-select" id="t-skill">${JOBINFO.required_skills.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>
       <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="t-type" onchange="typeFields()"><option value="mcq">Multiple choice</option><option value="practical">Practical</option></select></div>
-      <div class="form-group"><label class="form-label">Minutes</label><input class="form-input" id="t-min" type="number" value="15" min="1" max="240"></div></div>
+      <div class="form-group"><label class="form-label">Minutes</label><input class="form-input" id="t-min" type="text" inputmode="numeric" value="15"></div></div>
     <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="t-title"></div>
     <div id="t-fields"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveTest()">Create</button></div>`);
@@ -63,7 +63,7 @@ function typeFields() {
 }
 async function saveTest() {
   const type = document.getElementById('t-type').value;
-  const body = { skill: document.getElementById('t-skill').value, type, title: document.getElementById('t-title').value.trim(), time_limit_min: Number(document.getElementById('t-min').value) };
+  const body = { skill: document.getElementById('t-skill').value, type, title: document.getElementById('t-title').value.trim(), time_limit_min: toNumber(document.getElementById('t-min').value) };
   if (type === 'mcq') {
     body.questions = document.getElementById('t-q').value.trim().split(/\n\s*\n/).map(block => {
       const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
@@ -73,7 +73,7 @@ async function saveTest() {
   } else {
     body.prompt = document.getElementById('t-prompt').value.trim();
     body.rubric = document.getElementById('t-rubric').value.split('\n').map(l => l.trim()).filter(Boolean)
-      .map(l => { const [c, p] = l.split('|'); return { criterion: (c || '').trim(), max_points: Number(p) }; });
+      .map(l => { const [c, p] = l.split('|'); return { criterion: (c || '').trim(), max_points: toNumber(p) }; });
   }
   await act(() => api(`/api/jobs/${JOB}/assessments`, { method: 'POST', body }), 'Assessment created');
   closeModal(); load();
@@ -90,12 +90,12 @@ function grade(id) {
     <div class="hm-note mb-8">Task: ${esc(a.assessment.content.prompt)}</div>
     <div class="card mb-16"><div class="card-body" style="white-space:pre-wrap;font-size:14px">${esc(a.answers.response)}</div></div>
     ${a.assessment.content.rubric.map((r, i) => `<div class="form-group"><label class="form-label">${esc(r.criterion)} (0–${r.max_points})</label>
-      <input class="form-input g-pt" data-c="${esc(r.criterion)}" type="number" min="0" max="${r.max_points}" step="0.5"></div>`).join('')}
+      <input class="form-input g-pt" data-c="${esc(r.criterion)}" type="text" inputmode="decimal"></div>`).join('')}
     <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="g-notes"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveGrade(${id})">Save marks</button></div>`);
 }
 async function saveGrade(id) {
-  const points = Object.fromEntries([...document.querySelectorAll('.g-pt')].map(i => [i.dataset.c, Number(i.value)]));
+  const points = Object.fromEntries([...document.querySelectorAll('.g-pt')].map(i => [i.dataset.c, toNumber(i.value)]));
   await act(() => api(`/api/attempts/${id}/grade`, { method: 'POST', body: { points, notes: document.getElementById('g-notes').value } }), 'Marked');
   closeModal(); load();
 }

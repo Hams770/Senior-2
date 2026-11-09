@@ -116,6 +116,20 @@ def main():
         page.goto(BASE + "/candidates.html"); page.wait_for_load_state("networkidle")
         page.get_by_role("button", name="Review", exact=True).first.click(); page.wait_for_timeout(500)
         shot(page, "hr_candidates_review")
+        # ratings typed with Arabic-Indic digits, then evaluate and decide through the buttons
+        for k, v in (("exp", "٨٠"), ("edu", "٨٥"), ("soft", "75")):
+            page.fill(f"#r-{k}", v)
+        page.get_by_role("button", name="Save ratings").click(); page.wait_for_load_state("networkidle")
+        page.get_by_role("button", name="Evaluate now").click(); page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(300)
+        assert "Not evaluated yet" not in page.inner_text("#ev"), "Evaluate now did not show a score"
+        assert "Experience" in page.inner_text("#ev") and "80" in page.inner_text("#ev")
+        shot(page, "hr_candidates_evaluated")
+        page.select_option("#d-out", "advance")
+        page.fill("#d-reason", "Strong SQL and Python evidence in the CV")
+        page.get_by_role("button", name="Record decision").click(); page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(300)
+        assert "advance" in page.inner_text("#list"), "decision not shown in the list"
         page.goto(BASE + "/verification.html"); page.wait_for_load_state("networkidle")
         page.get_by_role("button", name="Mark", exact=True).first.click(); page.wait_for_timeout(300)
         for i, v in enumerate(["5", "3"]):
