@@ -1,0 +1,1155 @@
+{
+  "validation_rows": 1162,
+  "models": {
+    "256_s42": {
+      "max_len": 256,
+      "accuracy": 55.59380378657487,
+      "macro_f1": 46.536276922018175,
+      "good_fit_recall": 23.875432525951556,
+      "good_fit_precision": 46.62162162162162,
+      "confusion": [
+        [
+          475,
+          65,
+          39
+        ],
+        [
+          152,
+          102,
+          40
+        ],
+        [
+          122,
+          98,
+          69
+        ]
+      ],
+      "model_only_median_ms": 4.3636864999996305,
+      "with_tokenization_median_ms": 9.860600500005035
+    },
+    "256_s43": {
+      "max_len": 256,
+      "accuracy": 51.54905335628227,
+      "macro_f1": 37.646805064438716,
+      "good_fit_recall": 21.10726643598616,
+      "good_fit_precision": 31.93717277486911,
+      "confusion": [
+        [
+          502,
+          9,
+          68
+        ],
+        [
+          196,
+          36,
+          62
+        ],
+        [
+          186,
+          42,
+          61
+        ]
+      ],
+      "model_only_median_ms": 4.2759509999825696,
+      "with_tokenization_median_ms": 10.008776999995916
+    },
+    "256_s44": {
+      "max_len": 256,
+      "accuracy": 50.34423407917383,
+      "macro_f1": 35.85511233790764,
+      "good_fit_recall": 5.88235294117647,
+      "good_fit_precision": 19.767441860465116,
+      "confusion": [
+        [
+          492,
+          42,
+          45
+        ],
+        [
+          194,
+          76,
+          24
+        ],
+        [
+          196,
+          76,
+          17
+        ]
+      ],
+      "model_only_median_ms": 4.32332250001366,
+      "with_tokenization_median_ms": 10.006152499997256
+    },
+    "512_s42": {
+      "max_len": 512,
+      "accuracy": 56.454388984509464,
+      "macro_f1": 48.3969696969697,
+      "good_fit_recall": 43.59861591695502,
+      "good_fit_precision": 41.31147540983607,
+      "confusion": [
+        [
+          460,
+          35,
+          84
+        ],
+        [
+          129,
+          70,
+          95
+        ],
+        [
+          82,
+          81,
+          126
+        ]
+      ],
+      "model_only_median_ms": 9.89223050000021,
+      "with_tokenization_median_ms": 14.428201499995907
+    },
+    "512_s43": {
+      "max_len": 512,
+      "accuracy": 54.90533562822719,
+      "macro_f1": 43.849675389075344,
+      "good_fit_recall": 22.837370242214533,
+      "good_fit_precision": 37.28813559322034,
+      "confusion": [
+        [
+          497,
+          34,
+          48
+        ],
+        [
+          156,
+          75,
+          63
+        ],
+        [
+          130,
+          93,
+          66
+        ]
+      ],
+      "model_only_median_ms": 9.954024999998978,
+      "with_tokenization_median_ms": 14.485760999988884
+    },
+    "512_s44": {
+      "max_len": 512,
+      "accuracy": 51.63511187607573,
+      "macro_f1": 43.83909156303585,
+      "good_fit_recall": 28.719723183391004,
+      "good_fit_precision": 32.93650793650794,
+      "confusion": [
+        [
+          433,
+          39,
+          107
+        ],
+        [
+          148,
+          84,
+          62
+        ],
+        [
+          97,
+          109,
+          83
+        ]
+      ],
+      "model_only_median_ms": 9.745718999994324,
+      "with_tokenization_median_ms": 14.300347000002489
+    },
+    "512_w1.5_s42": {
+      "max_len": 512,
+      "accuracy": 57.91738382099828,
+      "macro_f1": 50.338183198550546,
+      "good_fit_recall": 32.17993079584775,
+      "good_fit_precision": 56.024096385542165,
+      "confusion": [
+        [
+          477,
+          58,
+          44
+        ],
+        [
+          162,
+          103,
+          29
+        ],
+        [
+          122,
+          74,
+          93
+        ]
+      ],
+      "model_only_median_ms": 9.687266500009173,
+      "with_tokenization_median_ms": 14.103650499976084
+    }
+  },
+  "checks": {
+    "256_s42: SHA-256 matches": true,
+    "256_s42: reproduces the CS4085 validation result": true,
+    "256_s43: SHA-256 matches": true,
+    "256_s43: reproduces the CS4085 validation result": true,
+    "256_s44: SHA-256 matches": true,
+    "256_s44: reproduces the CS4085 validation result": true,
+    "512_s42: SHA-256 matches": true,
+    "512_s42: reproduces Mervat's confusion matrix": true,
+    "512_s43: SHA-256 matches": true,
+    "512_s43: reproduces Mervat's confusion matrix": true,
+    "512_s44: SHA-256 matches": true,
+    "512_s44: reproduces Mervat's confusion matrix": true,
+    "512_w1.5_s42: SHA-256 matches": true,
+    "512_w1.5_s42: reproduces Mervat's confusion matrix": true
+  },
+  "rules": {
+    "256 | P(Good Fit) >= 0.100": {
+      "length": 256,
+      "rule": "threshold 0.100",
+      "per_seed": [
+        {
+          "review_pct": 67.46987951807229,
+          "good_fit_caught_pct": 79.58477508650519,
+          "good_fit_among_flagged_pct": 29.336734693877553
+        },
+        {
+          "review_pct": 40.533562822719446,
+          "good_fit_caught_pct": 52.595155709342556,
+          "good_fit_among_flagged_pct": 32.27176220806794
+        },
+        {
+          "review_pct": 66.35111876075732,
+          "good_fit_caught_pct": 78.54671280276817,
+          "good_fit_among_flagged_pct": 29.442282749675748
+        }
+      ],
+      "review_pct": 58.118187033849686,
+      "good_fit_caught_pct": 70.24221453287197,
+      "good_fit_among_flagged_pct": 30.350259883873747,
+      "caught_sd": 15.291612314176026
+    },
+    "256 | P(Good Fit) >= 0.125": {
+      "length": 256,
+      "rule": "threshold 0.125",
+      "per_seed": [
+        {
+          "review_pct": 56.970740103270224,
+          "good_fit_caught_pct": 76.12456747404845,
+          "good_fit_among_flagged_pct": 33.23262839879154
+        },
+        {
+          "review_pct": 37.177280550774526,
+          "good_fit_caught_pct": 50.17301038062284,
+          "good_fit_among_flagged_pct": 33.56481481481482
+        },
+        {
+          "review_pct": 57.40103270223752,
+          "good_fit_caught_pct": 70.24221453287197,
+          "good_fit_among_flagged_pct": 30.434782608695656
+        }
+      ],
+      "review_pct": 50.51635111876076,
+      "good_fit_caught_pct": 65.51326412918108,
+      "good_fit_among_flagged_pct": 32.41074194076734,
+      "caught_sd": 13.606728403027612
+    },
+    "256 | P(Good Fit) >= 0.150": {
+      "length": 256,
+      "rule": "threshold 0.150",
+      "per_seed": [
+        {
+          "review_pct": 51.03270223752151,
+          "good_fit_caught_pct": 73.01038062283737,
+          "good_fit_among_flagged_pct": 35.58178752107926
+        },
+        {
+          "review_pct": 35.714285714285715,
+          "good_fit_caught_pct": 48.44290657439446,
+          "good_fit_among_flagged_pct": 33.734939759036145
+        },
+        {
+          "review_pct": 49.225473321858864,
+          "good_fit_caught_pct": 63.667820069204154,
+          "good_fit_among_flagged_pct": 32.16783216783217
+        }
+      ],
+      "review_pct": 45.324153757888695,
+      "good_fit_caught_pct": 61.70703575547867,
+      "good_fit_among_flagged_pct": 33.82818648264919,
+      "caught_sd": 12.400552472528911
+    },
+    "256 | P(Good Fit) >= 0.175": {
+      "length": 256,
+      "rule": "threshold 0.175",
+      "per_seed": [
+        {
+          "review_pct": 44.6643717728055,
+          "good_fit_caught_pct": 68.5121107266436,
+          "good_fit_among_flagged_pct": 38.15028901734104
+        },
+        {
+          "review_pct": 33.13253012048193,
+          "good_fit_caught_pct": 45.674740484429066,
+          "good_fit_among_flagged_pct": 34.285714285714285
+        },
+        {
+          "review_pct": 40.70567986230637,
+          "good_fit_caught_pct": 53.28719723183391,
+          "good_fit_among_flagged_pct": 32.55813953488372
+        }
+      ],
+      "review_pct": 39.500860585197934,
+      "good_fit_caught_pct": 55.824682814302186,
+      "good_fit_among_flagged_pct": 34.998047612646346,
+      "caught_sd": 11.628219756520009
+    },
+    "256 | P(Good Fit) >= 0.200": {
+      "length": 256,
+      "rule": "threshold 0.200",
+      "per_seed": [
+        {
+          "review_pct": 39.75903614457831,
+          "good_fit_caught_pct": 63.667820069204154,
+          "good_fit_among_flagged_pct": 39.82683982683983
+        },
+        {
+          "review_pct": 31.153184165232357,
+          "good_fit_caught_pct": 42.56055363321799,
+          "good_fit_among_flagged_pct": 33.97790055248619
+        },
+        {
+          "review_pct": 34.251290877796905,
+          "good_fit_caught_pct": 43.25259515570934,
+          "good_fit_among_flagged_pct": 31.4070351758794
+        }
+      ],
+      "review_pct": 35.05450372920252,
+      "good_fit_caught_pct": 49.826989619377166,
+      "good_fit_among_flagged_pct": 35.07059185173514,
+      "caught_sd": 11.99150411845222
+    },
+    "256 | P(Good Fit) >= 0.225": {
+      "length": 256,
+      "rule": "threshold 0.225",
+      "per_seed": [
+        {
+          "review_pct": 34.50946643717728,
+          "good_fit_caught_pct": 56.05536332179931,
+          "good_fit_among_flagged_pct": 40.399002493765586
+        },
+        {
+          "review_pct": 29.43201376936317,
+          "good_fit_caught_pct": 39.792387543252595,
+          "good_fit_among_flagged_pct": 33.62573099415205
+        },
+        {
+          "review_pct": 30.120481927710845,
+          "good_fit_caught_pct": 37.0242214532872,
+          "good_fit_among_flagged_pct": 30.571428571428573
+        }
+      ],
+      "review_pct": 31.35398737808376,
+      "good_fit_caught_pct": 44.29065743944636,
+      "good_fit_among_flagged_pct": 34.8653873531154,
+      "caught_sd": 10.28211623398175
+    },
+    "256 | P(Good Fit) >= 0.250": {
+      "length": 256,
+      "rule": "threshold 0.250",
+      "per_seed": [
+        {
+          "review_pct": 29.862306368330465,
+          "good_fit_caught_pct": 48.44290657439446,
+          "good_fit_among_flagged_pct": 40.345821325648416
+        },
+        {
+          "review_pct": 26.67814113597246,
+          "good_fit_caught_pct": 35.98615916955018,
+          "good_fit_among_flagged_pct": 33.5483870967742
+        },
+        {
+          "review_pct": 26.67814113597246,
+          "good_fit_caught_pct": 31.141868512110726,
+          "good_fit_among_flagged_pct": 29.03225806451613
+        }
+      ],
+      "review_pct": 27.73952954675846,
+      "good_fit_caught_pct": 38.52364475201846,
+      "good_fit_among_flagged_pct": 34.308822162312914,
+      "caught_sd": 8.925278949090243
+    },
+    "256 | P(Good Fit) >= 0.275": {
+      "length": 256,
+      "rule": "threshold 0.275",
+      "per_seed": [
+        {
+          "review_pct": 25.04302925989673,
+          "good_fit_caught_pct": 40.830449826989614,
+          "good_fit_among_flagged_pct": 40.549828178694156
+        },
+        {
+          "review_pct": 25.04302925989673,
+          "good_fit_caught_pct": 33.56401384083045,
+          "good_fit_among_flagged_pct": 33.33333333333333
+        },
+        {
+          "review_pct": 22.030981067125648,
+          "good_fit_caught_pct": 25.259515570934255,
+          "good_fit_among_flagged_pct": 28.515625
+        }
+      ],
+      "review_pct": 24.0390131956397,
+      "good_fit_caught_pct": 33.21799307958477,
+      "good_fit_among_flagged_pct": 34.1329288373425,
+      "caught_sd": 7.79123200636519
+    },
+    "256 | P(Good Fit) >= 0.300": {
+      "length": 256,
+      "rule": "threshold 0.300",
+      "per_seed": [
+        {
+          "review_pct": 21.686746987951807,
+          "good_fit_caught_pct": 35.98615916955018,
+          "good_fit_among_flagged_pct": 41.269841269841265
+        },
+        {
+          "review_pct": 23.580034423407916,
+          "good_fit_caught_pct": 31.833910034602077,
+          "good_fit_among_flagged_pct": 33.57664233576642
+        },
+        {
+          "review_pct": 19.01893287435456,
+          "good_fit_caught_pct": 22.491349480968857,
+          "good_fit_among_flagged_pct": 29.411764705882355
+        }
+      ],
+      "review_pct": 21.428571428571427,
+      "good_fit_caught_pct": 30.103806228373703,
+      "good_fit_among_flagged_pct": 34.752749437163345,
+      "caught_sd": 6.911759292539164
+    },
+    "256 | P(Good Fit) >= 0.325": {
+      "length": 256,
+      "rule": "threshold 0.325",
+      "per_seed": [
+        {
+          "review_pct": 19.19104991394148,
+          "good_fit_caught_pct": 32.52595155709342,
+          "good_fit_among_flagged_pct": 42.152466367713004
+        },
+        {
+          "review_pct": 21.600688468158346,
+          "good_fit_caught_pct": 29.06574394463668,
+          "good_fit_among_flagged_pct": 33.46613545816733
+        },
+        {
+          "review_pct": 16.78141135972461,
+          "good_fit_caught_pct": 18.33910034602076,
+          "good_fit_among_flagged_pct": 27.17948717948718
+        }
+      ],
+      "review_pct": 19.19104991394148,
+      "good_fit_caught_pct": 26.643598615916954,
+      "good_fit_among_flagged_pct": 34.266029668455836,
+      "caught_sd": 7.397079005685795
+    },
+    "256 | P(Good Fit) >= 0.350": {
+      "length": 256,
+      "rule": "threshold 0.350",
+      "per_seed": [
+        {
+          "review_pct": 16.953528399311534,
+          "good_fit_caught_pct": 30.103806228373703,
+          "good_fit_among_flagged_pct": 44.16243654822335
+        },
+        {
+          "review_pct": 19.965576592082616,
+          "good_fit_caught_pct": 25.60553633217993,
+          "good_fit_among_flagged_pct": 31.896551724137932
+        },
+        {
+          "review_pct": 14.285714285714285,
+          "good_fit_caught_pct": 15.570934256055363,
+          "good_fit_among_flagged_pct": 27.10843373493976
+        }
+      ],
+      "review_pct": 17.068273092369477,
+      "good_fit_caught_pct": 23.760092272203,
+      "good_fit_among_flagged_pct": 34.38914066910035,
+      "caught_sd": 7.440116919432589
+    },
+    "256 | P(Good Fit) >= 0.375": {
+      "length": 256,
+      "rule": "threshold 0.375",
+      "per_seed": [
+        {
+          "review_pct": 14.543889845094665,
+          "good_fit_caught_pct": 25.951557093425603,
+          "good_fit_among_flagged_pct": 44.37869822485207
+        },
+        {
+          "review_pct": 17.728055077452666,
+          "good_fit_caught_pct": 21.79930795847751,
+          "good_fit_among_flagged_pct": 30.582524271844658
+        },
+        {
+          "review_pct": 12.048192771084338,
+          "good_fit_caught_pct": 12.45674740484429,
+          "good_fit_among_flagged_pct": 25.71428571428571
+        }
+      ],
+      "review_pct": 14.773379231210557,
+      "good_fit_caught_pct": 20.06920415224913,
+      "good_fit_among_flagged_pct": 33.55850273699415,
+      "caught_sd": 6.911759292539162
+    },
+    "256 | P(Good Fit) >= 0.400": {
+      "length": 256,
+      "rule": "threshold 0.400",
+      "per_seed": [
+        {
+          "review_pct": 11.790017211703958,
+          "good_fit_caught_pct": 21.10726643598616,
+          "good_fit_among_flagged_pct": 44.52554744525548
+        },
+        {
+          "review_pct": 16.265060240963855,
+          "good_fit_caught_pct": 20.415224913494807,
+          "good_fit_among_flagged_pct": 31.216931216931215
+        },
+        {
+          "review_pct": 10.413080895008605,
+          "good_fit_caught_pct": 9.688581314878892,
+          "good_fit_among_flagged_pct": 23.140495867768596
+        }
+      ],
+      "review_pct": 12.822719449225474,
+      "good_fit_caught_pct": 17.07035755478662,
+      "good_fit_among_flagged_pct": 32.9609915099851,
+      "caught_sd": 6.402163361650711
+    },
+    "256 | P(Good Fit) >= 0.425": {
+      "length": 256,
+      "rule": "threshold 0.425",
+      "per_seed": [
+        {
+          "review_pct": 9.81067125645439,
+          "good_fit_caught_pct": 18.33910034602076,
+          "good_fit_among_flagged_pct": 46.49122807017544
+        },
+        {
+          "review_pct": 14.457831325301203,
+          "good_fit_caught_pct": 15.916955017301039,
+          "good_fit_among_flagged_pct": 27.380952380952383
+        },
+        {
+          "review_pct": 8.00344234079174,
+          "good_fit_caught_pct": 6.228373702422145,
+          "good_fit_among_flagged_pct": 19.35483870967742
+        }
+      ],
+      "review_pct": 10.757314974182444,
+      "good_fit_caught_pct": 13.494809688581315,
+      "good_fit_among_flagged_pct": 31.075673053601747,
+      "caught_sd": 6.408394179049181
+    },
+    "256 | P(Good Fit) >= 0.450": {
+      "length": 256,
+      "rule": "threshold 0.450",
+      "per_seed": [
+        {
+          "review_pct": 8.00344234079174,
+          "good_fit_caught_pct": 15.22491349480969,
+          "good_fit_among_flagged_pct": 47.31182795698925
+        },
+        {
+          "review_pct": 12.048192771084338,
+          "good_fit_caught_pct": 12.45674740484429,
+          "good_fit_among_flagged_pct": 25.71428571428571
+        },
+        {
+          "review_pct": 6.626506024096386,
+          "good_fit_caught_pct": 4.1522491349480966,
+          "good_fit_among_flagged_pct": 15.584415584415584
+        }
+      ],
+      "review_pct": 8.89271371199082,
+      "good_fit_caught_pct": 10.611303344867357,
+      "good_fit_among_flagged_pct": 29.536843085230178,
+      "caught_sd": 5.762397230356077
+    },
+    "256 | P(Good Fit) >= 0.475": {
+      "length": 256,
+      "rule": "threshold 0.475",
+      "per_seed": [
+        {
+          "review_pct": 6.454388984509467,
+          "good_fit_caught_pct": 12.110726643598616,
+          "good_fit_among_flagged_pct": 46.666666666666664
+        },
+        {
+          "review_pct": 9.982788296041308,
+          "good_fit_caught_pct": 9.342560553633218,
+          "good_fit_among_flagged_pct": 23.275862068965516
+        },
+        {
+          "review_pct": 5.335628227194492,
+          "good_fit_caught_pct": 1.7301038062283738,
+          "good_fit_among_flagged_pct": 8.064516129032258
+        }
+      ],
+      "review_pct": 7.257601835915089,
+      "good_fit_caught_pct": 7.7277970011534025,
+      "good_fit_among_flagged_pct": 26.00234828822148,
+      "caught_sd": 5.375400321905903
+    },
+    "256 | P(Good Fit) >= 0.500": {
+      "length": 256,
+      "rule": "threshold 0.500",
+      "per_seed": [
+        {
+          "review_pct": 4.216867469879518,
+          "good_fit_caught_pct": 7.958477508650519,
+          "good_fit_among_flagged_pct": 46.93877551020408
+        },
+        {
+          "review_pct": 8.519793459552496,
+          "good_fit_caught_pct": 7.26643598615917,
+          "good_fit_among_flagged_pct": 21.21212121212121
+        },
+        {
+          "review_pct": 3.9586919104991396,
+          "good_fit_caught_pct": 0.34602076124567477,
+          "good_fit_among_flagged_pct": 2.1739130434782608
+        }
+      ],
+      "review_pct": 5.565117613310385,
+      "good_fit_caught_pct": 5.190311418685122,
+      "good_fit_among_flagged_pct": 23.44160325526785,
+      "caught_sd": 4.209524242420914
+    },
+    "256 | top-2": {
+      "length": 256,
+      "rule": "top-2",
+      "per_seed": [
+        {
+          "review_pct": 40.103270223752155,
+          "good_fit_caught_pct": 59.86159169550172,
+          "good_fit_among_flagged_pct": 37.1244635193133
+        },
+        {
+          "review_pct": 28.57142857142857,
+          "good_fit_caught_pct": 34.94809688581315,
+          "good_fit_among_flagged_pct": 30.42168674698795
+        },
+        {
+          "review_pct": 40.533562822719446,
+          "good_fit_caught_pct": 42.56055363321799,
+          "good_fit_among_flagged_pct": 26.11464968152866
+        }
+      ],
+      "review_pct": 36.40275387263339,
+      "good_fit_caught_pct": 45.79008073817763,
+      "good_fit_among_flagged_pct": 31.22026664927664,
+      "caught_sd": 12.76686883692891
+    },
+    "256 | predicted Good Fit": {
+      "length": 256,
+      "rule": "argmax",
+      "per_seed": [
+        {
+          "review_pct": 12.736660929432015,
+          "good_fit_caught_pct": 23.875432525951556,
+          "good_fit_among_flagged_pct": 46.62162162162162
+        },
+        {
+          "review_pct": 16.437177280550774,
+          "good_fit_caught_pct": 21.10726643598616,
+          "good_fit_among_flagged_pct": 31.93717277486911
+        },
+        {
+          "review_pct": 7.401032702237521,
+          "good_fit_caught_pct": 5.88235294117647,
+          "good_fit_among_flagged_pct": 19.767441860465116
+        }
+      ],
+      "review_pct": 12.19162363740677,
+      "good_fit_caught_pct": 16.955017301038062,
+      "good_fit_among_flagged_pct": 32.77541208565194,
+      "caught_sd": 9.688581314878892
+    },
+    "512 | P(Good Fit) >= 0.100": {
+      "length": 512,
+      "rule": "threshold 0.100",
+      "per_seed": [
+        {
+          "review_pct": 61.876075731497416,
+          "good_fit_caught_pct": 85.81314878892734,
+          "good_fit_among_flagged_pct": 34.4923504867872
+        },
+        {
+          "review_pct": 40.963855421686745,
+          "good_fit_caught_pct": 59.16955017301038,
+          "good_fit_among_flagged_pct": 35.924369747899156
+        },
+        {
+          "review_pct": 71.60068846815835,
+          "good_fit_caught_pct": 84.42906574394463,
+          "good_fit_among_flagged_pct": 29.326923076923077
+        }
+      ],
+      "review_pct": 58.14687320711417,
+      "good_fit_caught_pct": 76.47058823529413,
+      "good_fit_among_flagged_pct": 33.24788110386981,
+      "caught_sd": 14.999111973490136
+    },
+    "512 | P(Good Fit) >= 0.125": {
+      "length": 512,
+      "rule": "threshold 0.125",
+      "per_seed": [
+        {
+          "review_pct": 55.42168674698795,
+          "good_fit_caught_pct": 82.00692041522491,
+          "good_fit_among_flagged_pct": 36.80124223602485
+        },
+        {
+          "review_pct": 36.316695352839936,
+          "good_fit_caught_pct": 51.55709342560554,
+          "good_fit_among_flagged_pct": 35.308056872037916
+        },
+        {
+          "review_pct": 63.94148020654045,
+          "good_fit_caught_pct": 73.35640138408304,
+          "good_fit_among_flagged_pct": 28.532974427994617
+        }
+      ],
+      "review_pct": 51.89328743545611,
+      "good_fit_caught_pct": 68.97347174163782,
+      "good_fit_among_flagged_pct": 33.54742451201913,
+      "caught_sd": 15.690938312045166
+    },
+    "512 | P(Good Fit) >= 0.150": {
+      "length": 512,
+      "rule": "threshold 0.150",
+      "per_seed": [
+        {
+          "review_pct": 51.03270223752151,
+          "good_fit_caught_pct": 79.23875432525952,
+          "good_fit_among_flagged_pct": 38.61720067453626
+        },
+        {
+          "review_pct": 32.44406196213425,
+          "good_fit_caught_pct": 46.71280276816609,
+          "good_fit_among_flagged_pct": 35.80901856763926
+        },
+        {
+          "review_pct": 55.679862306368335,
+          "good_fit_caught_pct": 61.245674740484425,
+          "good_fit_among_flagged_pct": 27.35703245749614
+        }
+      ],
+      "review_pct": 46.385542168674704,
+      "good_fit_caught_pct": 62.39907727797001,
+      "good_fit_among_flagged_pct": 33.927750566557215,
+      "caught_sd": 16.29362250187802
+    },
+    "512 | P(Good Fit) >= 0.175": {
+      "length": 512,
+      "rule": "threshold 0.175",
+      "per_seed": [
+        {
+          "review_pct": 48.795180722891565,
+          "good_fit_caught_pct": 77.16262975778547,
+          "good_fit_among_flagged_pct": 39.32980599647266
+        },
+        {
+          "review_pct": 29.948364888123923,
+          "good_fit_caught_pct": 43.944636678200695,
+          "good_fit_among_flagged_pct": 36.49425287356322
+        },
+        {
+          "review_pct": 50.688468158347675,
+          "good_fit_caught_pct": 56.05536332179931,
+          "good_fit_among_flagged_pct": 27.504244482173174
+        }
+      ],
+      "review_pct": 43.14400458978772,
+      "good_fit_caught_pct": 59.05420991926183,
+      "good_fit_among_flagged_pct": 34.44276778406969,
+      "caught_sd": 16.81081725393414
+    },
+    "512 | P(Good Fit) >= 0.200": {
+      "length": 512,
+      "rule": "threshold 0.200",
+      "per_seed": [
+        {
+          "review_pct": 45.69707401032702,
+          "good_fit_caught_pct": 71.97231833910035,
+          "good_fit_among_flagged_pct": 39.1713747645951
+        },
+        {
+          "review_pct": 27.36660929432014,
+          "good_fit_caught_pct": 41.17647058823529,
+          "good_fit_among_flagged_pct": 37.42138364779874
+        },
+        {
+          "review_pct": 45.69707401032702,
+          "good_fit_caught_pct": 52.24913494809689,
+          "good_fit_among_flagged_pct": 28.436911487758948
+        }
+      ],
+      "review_pct": 39.58691910499139,
+      "good_fit_caught_pct": 55.13264129181084,
+      "good_fit_among_flagged_pct": 35.009889966717594,
+      "caught_sd": 15.599103060730581
+    },
+    "512 | P(Good Fit) >= 0.225": {
+      "length": 512,
+      "rule": "threshold 0.225",
+      "per_seed": [
+        {
+          "review_pct": 43.97590361445783,
+          "good_fit_caught_pct": 70.24221453287197,
+          "good_fit_among_flagged_pct": 39.726027397260275
+        },
+        {
+          "review_pct": 24.69879518072289,
+          "good_fit_caught_pct": 36.332179930795846,
+          "good_fit_among_flagged_pct": 36.58536585365854
+        },
+        {
+          "review_pct": 42.3407917383821,
+          "good_fit_caught_pct": 49.82698961937716,
+          "good_fit_among_flagged_pct": 29.268292682926827
+        }
+      ],
+      "review_pct": 37.00516351118761,
+      "good_fit_caught_pct": 52.133794694348325,
+      "good_fit_among_flagged_pct": 35.19322864461521,
+      "caught_sd": 17.072305758711522
+    },
+    "512 | P(Good Fit) >= 0.250": {
+      "length": 512,
+      "rule": "threshold 0.250",
+      "per_seed": [
+        {
+          "review_pct": 42.08261617900172,
+          "good_fit_caught_pct": 68.5121107266436,
+          "good_fit_among_flagged_pct": 40.49079754601227
+        },
+        {
+          "review_pct": 22.547332185886404,
+          "good_fit_caught_pct": 33.910034602076124,
+          "good_fit_among_flagged_pct": 37.404580152671755
+        },
+        {
+          "review_pct": 39.586919104991395,
+          "good_fit_caught_pct": 48.78892733564014,
+          "good_fit_among_flagged_pct": 30.65217391304348
+        }
+      ],
+      "review_pct": 34.738955823293175,
+      "good_fit_caught_pct": 50.40369088811995,
+      "good_fit_among_flagged_pct": 36.18251720390917,
+      "caught_sd": 17.357462776293186
+    },
+    "512 | P(Good Fit) >= 0.275": {
+      "length": 512,
+      "rule": "threshold 0.275",
+      "per_seed": [
+        {
+          "review_pct": 39.41480206540447,
+          "good_fit_caught_pct": 65.05190311418684,
+          "good_fit_among_flagged_pct": 41.04803493449782
+        },
+        {
+          "review_pct": 20.998278829604132,
+          "good_fit_caught_pct": 30.79584775086505,
+          "good_fit_among_flagged_pct": 36.47540983606557
+        },
+        {
+          "review_pct": 36.316695352839936,
+          "good_fit_caught_pct": 45.32871972318339,
+          "good_fit_among_flagged_pct": 31.04265402843602
+        }
+      ],
+      "review_pct": 32.24325874928285,
+      "good_fit_caught_pct": 47.05882352941176,
+      "good_fit_among_flagged_pct": 36.18869959966647,
+      "caught_sd": 17.193437022567256
+    },
+    "512 | P(Good Fit) >= 0.300": {
+      "length": 512,
+      "rule": "threshold 0.300",
+      "per_seed": [
+        {
+          "review_pct": 36.91910499139415,
+          "good_fit_caught_pct": 60.553633217993074,
+          "good_fit_among_flagged_pct": 40.79254079254079
+        },
+        {
+          "review_pct": 19.62134251290878,
+          "good_fit_caught_pct": 29.411764705882355,
+          "good_fit_among_flagged_pct": 37.280701754385966
+        },
+        {
+          "review_pct": 33.13253012048193,
+          "good_fit_caught_pct": 42.90657439446367,
+          "good_fit_among_flagged_pct": 32.20779220779221
+        }
+      ],
+      "review_pct": 29.890992541594954,
+      "good_fit_caught_pct": 44.29065743944636,
+      "good_fit_among_flagged_pct": 36.76034491823966,
+      "caught_sd": 15.617002209545682
+    },
+    "512 | P(Good Fit) >= 0.325": {
+      "length": 512,
+      "rule": "threshold 0.325",
+      "per_seed": [
+        {
+          "review_pct": 34.42340791738382,
+          "good_fit_caught_pct": 56.747404844290664,
+          "good_fit_among_flagged_pct": 41.0
+        },
+        {
+          "review_pct": 17.98623063683305,
+          "good_fit_caught_pct": 26.297577854671278,
+          "good_fit_among_flagged_pct": 36.36363636363637
+        },
+        {
+          "review_pct": 30.37865748709122,
+          "good_fit_caught_pct": 39.44636678200692,
+          "good_fit_among_flagged_pct": 32.29461756373937
+        }
+      ],
+      "review_pct": 27.59609868043603,
+      "good_fit_caught_pct": 40.83044982698962,
+      "good_fit_among_flagged_pct": 36.55275130912525,
+      "caught_sd": 15.272025253089216
+    },
+    "512 | P(Good Fit) >= 0.350": {
+      "length": 512,
+      "rule": "threshold 0.350",
+      "per_seed": [
+        {
+          "review_pct": 31.411359724612737,
+          "good_fit_caught_pct": 51.903114186851205,
+          "good_fit_among_flagged_pct": 41.0958904109589
+        },
+        {
+          "review_pct": 17.03958691910499,
+          "good_fit_caught_pct": 25.60553633217993,
+          "good_fit_among_flagged_pct": 37.37373737373738
+        },
+        {
+          "review_pct": 28.055077452667813,
+          "good_fit_caught_pct": 35.98615916955018,
+          "good_fit_among_flagged_pct": 31.901840490797547
+        }
+      ],
+      "review_pct": 25.502008032128515,
+      "good_fit_caught_pct": 37.831603229527104,
+      "good_fit_among_flagged_pct": 36.790489425164616,
+      "caught_sd": 13.245561448632607
+    },
+    "512 | P(Good Fit) >= 0.375": {
+      "length": 512,
+      "rule": "threshold 0.375",
+      "per_seed": [
+        {
+          "review_pct": 26.764199655765918,
+          "good_fit_caught_pct": 44.636678200692046,
+          "good_fit_among_flagged_pct": 41.47909967845659
+        },
+        {
+          "review_pct": 15.834767641996558,
+          "good_fit_caught_pct": 23.875432525951556,
+          "good_fit_among_flagged_pct": 37.5
+        },
+        {
+          "review_pct": 25.645438898450944,
+          "good_fit_caught_pct": 32.52595155709342,
+          "good_fit_among_flagged_pct": 31.543624161073826
+        }
+      ],
+      "review_pct": 22.748135398737805,
+      "good_fit_caught_pct": 33.679354094579004,
+      "good_fit_among_flagged_pct": 36.840907946510136,
+      "caught_sd": 10.428570542113686
+    },
+    "512 | P(Good Fit) >= 0.400": {
+      "length": 512,
+      "rule": "threshold 0.400",
+      "per_seed": [
+        {
+          "review_pct": 23.32185886402754,
+          "good_fit_caught_pct": 41.522491349480966,
+          "good_fit_among_flagged_pct": 44.28044280442804
+        },
+        {
+          "review_pct": 14.629948364888124,
+          "good_fit_caught_pct": 22.837370242214533,
+          "good_fit_among_flagged_pct": 38.82352941176471
+        },
+        {
+          "review_pct": 24.268502581755595,
+          "good_fit_caught_pct": 31.833910034602077,
+          "good_fit_among_flagged_pct": 32.62411347517731
+        }
+      ],
+      "review_pct": 20.740103270223752,
+      "good_fit_caught_pct": 32.06459054209919,
+      "good_fit_among_flagged_pct": 38.57602856379002,
+      "caught_sd": 9.34469624015183
+    },
+    "512 | P(Good Fit) >= 0.425": {
+      "length": 512,
+      "rule": "threshold 0.425",
+      "per_seed": [
+        {
+          "review_pct": 19.879518072289155,
+          "good_fit_caught_pct": 35.98615916955018,
+          "good_fit_among_flagged_pct": 45.02164502164502
+        },
+        {
+          "review_pct": 13.080895008605854,
+          "good_fit_caught_pct": 21.453287197231834,
+          "good_fit_among_flagged_pct": 40.78947368421053
+        },
+        {
+          "review_pct": 22.80550774526678,
+          "good_fit_caught_pct": 30.103806228373703,
+          "good_fit_among_flagged_pct": 32.83018867924528
+        }
+      ],
+      "review_pct": 18.588640275387263,
+      "good_fit_caught_pct": 29.181084198385236,
+      "good_fit_among_flagged_pct": 39.54710246170028,
+      "caught_sd": 7.3102430807339465
+    },
+    "512 | P(Good Fit) >= 0.450": {
+      "length": 512,
+      "rule": "threshold 0.450",
+      "per_seed": [
+        {
+          "review_pct": 16.00688468158348,
+          "good_fit_caught_pct": 30.44982698961938,
+          "good_fit_among_flagged_pct": 47.31182795698925
+        },
+        {
+          "review_pct": 11.962134251290877,
+          "good_fit_caught_pct": 20.415224913494807,
+          "good_fit_among_flagged_pct": 42.44604316546763
+        },
+        {
+          "review_pct": 21.17039586919105,
+          "good_fit_caught_pct": 28.373702422145332,
+          "good_fit_among_flagged_pct": 33.33333333333333
+        }
+      ],
+      "review_pct": 16.379804934021802,
+      "good_fit_caught_pct": 26.41291810841984,
+      "good_fit_among_flagged_pct": 41.030401485263404,
+      "caught_sd": 5.2968685135894065
+    },
+    "512 | P(Good Fit) >= 0.475": {
+      "length": 512,
+      "rule": "threshold 0.475",
+      "per_seed": [
+        {
+          "review_pct": 13.68330464716007,
+          "good_fit_caught_pct": 26.989619377162633,
+          "good_fit_among_flagged_pct": 49.056603773584904
+        },
+        {
+          "review_pct": 10.843373493975903,
+          "good_fit_caught_pct": 19.377162629757784,
+          "good_fit_among_flagged_pct": 44.44444444444444
+        },
+        {
+          "review_pct": 19.879518072289155,
+          "good_fit_caught_pct": 25.951557093425603,
+          "good_fit_among_flagged_pct": 32.467532467532465
+        }
+      ],
+      "review_pct": 14.802065404475044,
+      "good_fit_caught_pct": 24.106113033448676,
+      "good_fit_among_flagged_pct": 41.989526895187275,
+      "caught_sd": 4.128149981124172
+    },
+    "512 | P(Good Fit) >= 0.500": {
+      "length": 512,
+      "rule": "threshold 0.500",
+      "per_seed": [
+        {
+          "review_pct": 9.63855421686747,
+          "good_fit_caught_pct": 19.72318339100346,
+          "good_fit_among_flagged_pct": 50.89285714285714
+        },
+        {
+          "review_pct": 9.294320137693632,
+          "good_fit_caught_pct": 17.99307958477509,
+          "good_fit_among_flagged_pct": 48.148148148148145
+        },
+        {
+          "review_pct": 18.416523235800344,
+          "good_fit_caught_pct": 24.22145328719723,
+          "good_fit_among_flagged_pct": 32.71028037383177
+        }
+      ],
+      "review_pct": 12.449799196787149,
+      "good_fit_caught_pct": 20.645905420991927,
+      "good_fit_among_flagged_pct": 43.91709522161236,
+      "caught_sd": 3.2150772467742446
+    },
+    "512 | top-2": {
+      "length": 512,
+      "rule": "top-2",
+      "per_seed": [
+        {
+          "review_pct": 39.75903614457831,
+          "good_fit_caught_pct": 66.08996539792388,
+          "good_fit_among_flagged_pct": 41.34199134199134
+        },
+        {
+          "review_pct": 22.547332185886404,
+          "good_fit_caught_pct": 33.910034602076124,
+          "good_fit_among_flagged_pct": 37.404580152671755
+        },
+        {
+          "review_pct": 52.83993115318416,
+          "good_fit_caught_pct": 51.55709342560554,
+          "good_fit_among_flagged_pct": 24.267100977198698
+        }
+      ],
+      "review_pct": 38.38209982788296,
+      "good_fit_caught_pct": 50.51903114186851,
+      "good_fit_among_flagged_pct": 34.337890823953934,
+      "caught_sd": 16.115060238332205
+    },
+    "512 | predicted Good Fit": {
+      "length": 512,
+      "rule": "argmax",
+      "per_seed": [
+        {
+          "review_pct": 26.247848537005165,
+          "good_fit_caught_pct": 43.59861591695502,
+          "good_fit_among_flagged_pct": 41.31147540983607
+        },
+        {
+          "review_pct": 15.23235800344234,
+          "good_fit_caught_pct": 22.837370242214533,
+          "good_fit_among_flagged_pct": 37.28813559322034
+        },
+        {
+          "review_pct": 21.686746987951807,
+          "good_fit_caught_pct": 28.719723183391004,
+          "good_fit_among_flagged_pct": 32.93650793650794
+        }
+      ],
+      "review_pct": 21.055651176133104,
+      "good_fit_caught_pct": 31.718569780853517,
+      "good_fit_among_flagged_pct": 37.178706313188115,
+      "caught_sd": 10.700567329729159
+    }
+  }
+}
