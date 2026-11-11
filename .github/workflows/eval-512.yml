@@ -1,0 +1,22 @@
+name: Compare 256 and 512 (validation only)
+on:
+  push:
+    branches: [claude/eval-512]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r backend/requirements-model.txt pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2
+      - run: git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
+      - run: python evaluation/fr09_fit/compare_256_512.py --dl ../HireMind-DL
+      - name: Publish the report
+        if: always()
+        run: |
+          mkdir -p /tmp/pub && cp test-results/compare_256_512.* /tmp/pub/ || true
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git fetch -q origin eval-results || true
+          git checkout -q --orphan pub && git rm -rfq . && cp /tmp/pub/* . && git add compare_256_512.* && git commit -qm "256 vs 512 validation report" && git push -fq origin pub:eval-results
