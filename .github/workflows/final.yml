@@ -1,0 +1,37 @@
+name: Final model and held-out test
+on:
+  push:
+    branches: [claude/final]
+jobs:
+  final:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions: { contents: write }
+    env: { HIREMIND_MAX_LEN: "512" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install transformers==4.51.3 pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2 numpy
+      - run: git clone -q https://github.com/Hams770/HireMind-DL.git ../HireMind-DL && cd ../HireMind-DL && git checkout -q 1f22f34462c400f884bb0a00f061dbea0bd687d5
+      - name: Train the final model (validation only)
+        run: python evaluation/knowledge/train_knowledge.py --dl ../HireMind-DL --seed 42 --variant final --knowledge 1 --eval-train --save-preds --save-weights final_model
+      - name: Check it reproduces the recorded validation result
+        run: |
+          python - <<'PY'
+          import json; r = json.load(open("test-results/knowledge_run_final_s42.json"))
+          rec = {"accuracy": 57.40, "macro_f1": 50.66, "good_fit_recall": 36.68}
+          for k, v in rec.items():
+              assert abs(r[k] - v) < 0.05, (k, r[k], v)
+          print("reproduced:", {k: round(r[k], 2) for k in rec})
+          PY
+      - name: Held-out test, once
+        run: |
+          git fetch -q origin '+refs/heads/claude/eval-512:refs/remotes/origin/claude/eval-512'
+          git show origin/claude/eval-512:eval_weights/M0_L512_s42.pt > /tmp/M0_L512_s42.pt
+          python evaluation/knowledge/final_test.py --dl ../HireMind-DL --final final_model/M0_L512_final_s42/weights.pt --m512 /tmp/M0_L512_s42.pt
+      - name: Publish
+        run: |
+          mkdir -p /tmp/pub && cp -r final_model test-results /tmp/pub/
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git checkout -q --orphan pub && git rm -rfq . && cp -r /tmp/pub/* . && git add -A && git commit -qm "final model and test" && git push -fq origin pub:final-results
