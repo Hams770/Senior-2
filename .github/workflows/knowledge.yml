@@ -3,19 +3,40 @@ on:
   push:
     branches: [claude/knowledge]
 jobs:
-  knowledge:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [42, 43, 44]
+        variant: [control, knowledge]
+    env: { HIREMIND_MAX_LEN: "512" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install transformers==4.51.3 pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2 numpy
+      - run: git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
+      - run: python evaluation/knowledge/train_knowledge.py --dl ../HireMind-DL --seed ${{ matrix.seed }} --variant ${{ matrix.variant }}
+      - uses: actions/upload-artifact@v4
+        with: {name: "run-${{ matrix.variant }}-${{ matrix.seed }}", path: test-results/}
+  summary:
+    needs: train
+    if: always()
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2
-      - run: git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
-      - run: python evaluation/knowledge/signal_check.py --dl ../HireMind-DL
+      - run: pip install numpy
+      - uses: actions/download-artifact@v4
+        with: {path: runs}
+      - run: python evaluation/knowledge/summarise.py runs
       - name: Publish
-        if: always()
         run: |
-          mkdir -p /tmp/pub && cp test-results/knowledge_* /tmp/pub/ 2>/dev/null || true
+          mkdir -p /tmp/pub && cp knowledge_training.* /tmp/pub/ && find runs -name "*.json" -exec cp {} /tmp/pub/ \;
           git config user.name "github-actions" && git config user.email "actions@github.com"
-          git checkout -q --orphan pub && git rm -rfq . && cp /tmp/pub/* . && git add -A && git commit -qm "knowledge results" && git push -fq origin pub:knowledge-results
+          git fetch -q origin knowledge-results && git checkout -q -b pub origin/knowledge-results
+          cp /tmp/pub/* . && git add -A && git commit -qm "knowledge training results" && git push -q origin pub:knowledge-results
