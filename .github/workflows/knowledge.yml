@@ -1,0 +1,21 @@
+name: Knowledge experiment
+on:
+  push:
+    branches: [claude/knowledge]
+jobs:
+  knowledge:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2
+      - run: git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
+      - run: python evaluation/knowledge/signal_check.py --dl ../HireMind-DL
+      - name: Publish
+        if: always()
+        run: |
+          mkdir -p /tmp/pub && cp test-results/knowledge_* /tmp/pub/ 2>/dev/null || true
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git checkout -q --orphan pub && git rm -rfq . && cp /tmp/pub/* . && git add -A && git commit -qm "knowledge results" && git push -fq origin pub:knowledge-results
