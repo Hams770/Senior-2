@@ -41,14 +41,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install numpy
+      - run: pip install numpy pandas==2.2.3 tabulate
       - uses: actions/download-artifact@v4
         with: {path: /tmp/runs}
       - run: cd /tmp && python $GITHUB_WORKSPACE/evaluation/knowledge/summarise.py /tmp/runs $GITHUB_WORKSPACE/evaluation/knowledge/experiment.json
+      - run: cd /tmp && python $GITHUB_WORKSPACE/evaluation/knowledge/error_analysis.py /tmp/runs || true
       - name: Publish
         run: |
           stamp=$(date -u +%Y%m%dT%H%M%S)
-          mkdir -p /tmp/pub/$stamp && cp /tmp/knowledge_training.* /tmp/pub/ && cp /tmp/knowledge_training.* /tmp/pub/$stamp/ && find /tmp/runs -name "*.json" -exec cp {} /tmp/pub/$stamp/ \;
+          mkdir -p /tmp/pub/$stamp && cp /tmp/knowledge_training.* /tmp/pub/ && cp /tmp/knowledge_training.* /tmp/pub/$stamp/ && (cp /tmp/error_analysis.md /tmp/pub/ && cp /tmp/error_analysis.md /tmp/pub/$stamp/ || true) && find /tmp/runs \( -name "*.json" -o -name "*.csv" \) -exec cp {} /tmp/pub/$stamp/ \;
           git config user.name "github-actions" && git config user.email "actions@github.com"
           git fetch -q origin knowledge-results && git checkout -qf -B pub origin/knowledge-results
           cp -r /tmp/pub/* . && git add -A && git commit -qm "knowledge results $stamp" && git push -q origin pub:knowledge-results

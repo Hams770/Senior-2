@@ -1,9 +1,8 @@
 {
-  "name": "confirmation on 8 seeds: train longer (6 epochs) on top of the knowledge line; same criteria, decision final",
+  "name": "error analysis run: knowledge model with per-pair validation predictions",
   "reference": "knowledge",
   "arms": {
-    "knowledge": "--knowledge 1",
-    "knowledge_6ep": "--knowledge 1 --epochs 6"
+    "knowledge": "--knowledge 1 --save-preds"
   },
   "seeds": [42, 43, 44, 45, 46, 47, 48, 49]
 }

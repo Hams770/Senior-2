@@ -39,6 +39,7 @@ def main():
     ap.add_argument("--epochs", type=int, default=3, help="training length (one knob)")
     ap.add_argument("--device", default="cpu", help="cpu, cuda or auto (Colab GPU)")
     ap.add_argument("--save-weights", help="folder to save the selected checkpoint (weights.pt + info.json)")
+    ap.add_argument("--save-preds", action="store_true", help="write per-pair validation predictions (error analysis)")
     ap.add_argument("--eval-train", action="store_true", help="also score the selected checkpoint on the training set (bias vs variance)")
     a = ap.parse_args()
     use_knowledge = a.knowledge if a.knowledge is not None else int(a.variant != "control")
@@ -59,9 +60,10 @@ def main():
     raw = {"train": read_raw(download_raw(cfg, "train"))}  # test file is never downloaded
     man = load_manifest(cfg)
     tok = AutoTokenizer.from_pretrained(cfg["student"]["name"], revision=cfg["student"]["revision"])
-    ds = {}
+    ds, frames = {}, {}
     for part in ("train", "validation"):
         d = split_frame(raw, man, part, cfg["dataset"]["rows"][part])
+        frames[part] = d.copy()
         if use_knowledge:
             d["job_description_text"] = [knowledge_line(features(cv, job)) + "\n" + job
                                          for cv, job in zip(d.resume_text, d.job_description_text)]
@@ -85,6 +87,27 @@ def main():
         m.load_state_dict(best_state)
         t, _, _ = evaluate(m.to(dev), ds["train"], dev, 64)
         out.update(train_accuracy=t["accuracy"], train_macro_f1=t["macro_f1"], train_good_fit_recall=t["good_fit_recall"])
+    if a.save_preds:
+        import pandas as pd
+        from hiremind_dl.evaluation import evaluate
+        from hiremind_dl.models import build_model
+        m = build_model("M0", cfg, a.seed)
+        m.load_state_dict(best_state)
+        _, logits, pred = evaluate(m.to(dev), ds["validation"], dev, 64)
+        prob = logits.softmax(-1).numpy()
+        v = frames["validation"]
+        rows = []
+        for i, (cv, job) in enumerate(zip(v.resume_text, v.job_description_text)):
+            f = features(cv, job)
+            rows.append({"row_uid": v.row_uid.iloc[i], "job_id": v.job_id.iloc[i], "job_group": v.job_group.iloc[i],
+                         "label": int(v.label_id.iloc[i]), "pred": int(pred[i]),
+                         "p_no": float(prob[i, 0]), "p_potential": float(prob[i, 1]), "p_good": float(prob[i, 2]),
+                         "n_job_skills": f["n_job_skills"], "n_found": f["n_found"], "match_ratio": f["match_ratio"],
+                         "meets_years": f["meets_years"], "cv_tokens": len(tok.tokenize(cv)),
+                         "job_tokens": len(tok.tokenize(job)), "job_title": job.strip().split("\n")[0][:80]})
+        res0 = Path(os.getenv("HIREMIND_RESULTS", ROOT / "test-results"))
+        res0.mkdir(exist_ok=True)
+        pd.DataFrame(rows).to_csv(res0 / f"val_predictions_{a.variant}_s{a.seed}.csv", index=False)
     if a.save_weights:
         import hashlib
         d = Path(a.save_weights) / f"M0_L512_{a.variant}_s{a.seed}"
