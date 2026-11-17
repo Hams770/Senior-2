@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dl", required=True)
-    ap.add_argument("--seed", type=int, required=True, choices=[42, 43, 44])
+    ap.add_argument("--seed", type=int, required=True, choices=range(42, 50))
     ap.add_argument("--variant", required=True, choices=["control", "knowledge"])
     a = ap.parse_args()
     assert os.getenv("HIREMIND_MAX_LEN") == "512", "set HIREMIND_MAX_LEN=512"

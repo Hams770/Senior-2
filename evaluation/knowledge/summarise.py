@@ -16,6 +16,9 @@ for r in sorted(runs, key=lambda r: (r["variant"], r["seed"])):
 mean = {v: {m: float(np.mean([r[m] for r in runs if r["variant"] == v])) for m in M} for v in ("control", "knowledge")}
 for v in ("control", "knowledge"):
     L.append(f"| **{v} mean** | | " + " | ".join(f"{mean[v][m]:.2f}" for m in M) + " | |")
+by = {(r["variant"], r["seed"]): r for r in runs}
+pairs = [(by[("knowledge", s)], by[("control", s)]) for s in sorted({r["seed"] for r in runs})
+         if ("knowledge", s) in by and ("control", s) in by]
 d = {m: mean["knowledge"][m] - mean["control"][m] for m in M}
 crit = {"Good Fit recall >= +2.0": d["good_fit_recall"] >= 2.0, "Accuracy >= +1.0": d["accuracy"] >= 1.0,
         "Macro-F1 >= -1.0": d["macro_f1"] >= -1.0}
@@ -24,6 +27,8 @@ L += ["", "| Difference (knowledge - control) | Value | Criterion met |", "|---|
       f"| Accuracy | {d['accuracy']:+.2f} | {crit['Accuracy >= +1.0']} |",
       f"| Macro-F1 | {d['macro_f1']:+.2f} | {crit['Macro-F1 >= -1.0']} |",
       f"| Good Fit precision | {d['good_fit_precision']:+.2f} | (reported) |", "",
+      f"Seeds where knowledge beat control: Good Fit recall {sum(k['good_fit_recall'] > c['good_fit_recall'] for k, c in pairs)}/{len(pairs)}, "
+      f"accuracy {sum(k['accuracy'] > c['accuracy'] for k, c in pairs)}/{len(pairs)}, macro-F1 {sum(k['macro_f1'] > c['macro_f1'] for k, c in pairs)}/{len(pairs)}.", "",
       f"**Verdict: {'PROMISING, all criteria met' if all(crit.values()) else 'NOT IMPROVED, criteria not met'}** (n = {len(runs)} runs)"]
 Path("knowledge_training.md").write_text("\n".join(L) + "\n")
 Path("knowledge_training.json").write_text(json.dumps({"runs": runs, "mean": mean, "difference": d, "criteria": crit}, indent=2))

@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        seed: [42, 43, 44]
+        seed: [42, 43, 44, 45, 46, 47, 48, 49]
         variant: [control, knowledge]
     env: { HIREMIND_MAX_LEN: "512" }
     steps:
