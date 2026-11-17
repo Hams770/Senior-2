@@ -1,9 +1,10 @@
 {
-  "name": "diagnose: bias or variance (Orthogonalization, CS4085 Chapter 4)",
-  "reference": "control",
+  "name": "bias knobs on top of the knowledge line: bigger network, train longer (one knob per arm)",
+  "reference": "knowledge",
   "arms": {
-    "control": "--knowledge 0 --eval-train",
-    "knowledge": "--knowledge 1 --eval-train"
+    "knowledge": "--knowledge 1 --eval-train",
+    "knowledge_mini": "--knowledge 1 --base mini --eval-train",
+    "knowledge_6ep": "--knowledge 1 --epochs 6 --eval-train"
   },
   "seeds": [42, 43, 44]
 }
