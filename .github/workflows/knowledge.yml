@@ -3,14 +3,25 @@ on:
   push:
     branches: [claude/knowledge]
 jobs:
-  train:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          python3 -c "
+          import json; e=json.load(open('evaluation/knowledge/experiment.json'))
+          print('matrix=' + json.dumps({'include': [{'arm': a, 'args': x, 'seed': s} for a, x in e['arms'].items() for s in e['seeds']]}))
+          " >> "$GITHUB_OUTPUT"
+  train:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
     strategy:
       fail-fast: false
-      matrix:
-        seed: [42, 43, 44, 45, 46, 47, 48, 49]
-        variant: [control, knowledge]
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     env: { HIREMIND_MAX_LEN: "512" }
     steps:
       - uses: actions/checkout@v4
@@ -18,9 +29,9 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install transformers==4.51.3 pandas==2.2.3 scikit-learn==1.6.1 huggingface-hub==0.30.2 numpy
       - run: git clone -q --depth 1 https://github.com/Hams770/HireMind-DL.git ../HireMind-DL
-      - run: python evaluation/knowledge/train_knowledge.py --dl ../HireMind-DL --seed ${{ matrix.seed }} --variant ${{ matrix.variant }}
+      - run: python evaluation/knowledge/train_knowledge.py --dl ../HireMind-DL --seed ${{ matrix.seed }} --variant ${{ matrix.arm }} ${{ matrix.args }}
       - uses: actions/upload-artifact@v4
-        with: {name: "run-${{ matrix.variant }}-${{ matrix.seed }}", path: test-results/}
+        with: {name: "run-${{ matrix.arm }}-${{ matrix.seed }}", path: test-results/}
   summary:
     needs: train
     if: always()
@@ -32,11 +43,12 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install numpy
       - uses: actions/download-artifact@v4
-        with: {path: runs}
-      - run: python evaluation/knowledge/summarise.py runs
+        with: {path: /tmp/runs}
+      - run: cd /tmp && python $GITHUB_WORKSPACE/evaluation/knowledge/summarise.py /tmp/runs $GITHUB_WORKSPACE/evaluation/knowledge/experiment.json
       - name: Publish
         run: |
-          mkdir -p /tmp/pub && cp knowledge_training.* /tmp/pub/ && find runs -name "*.json" -exec cp {} /tmp/pub/ \;
+          stamp=$(date -u +%Y%m%dT%H%M%S)
+          mkdir -p /tmp/pub/$stamp && cp /tmp/knowledge_training.* /tmp/pub/ && cp /tmp/knowledge_training.* /tmp/pub/$stamp/ && find /tmp/runs -name "*.json" -exec cp {} /tmp/pub/$stamp/ \;
           git config user.name "github-actions" && git config user.email "actions@github.com"
-          git fetch -q origin knowledge-results && git checkout -q -b pub origin/knowledge-results
-          cp /tmp/pub/* . && git add -A && git commit -qm "knowledge training results" && git push -q origin pub:knowledge-results
+          git fetch -q origin knowledge-results && git checkout -qf -B pub origin/knowledge-results
+          cp -r /tmp/pub/* . && git add -A && git commit -qm "knowledge results $stamp" && git push -q origin pub:knowledge-results

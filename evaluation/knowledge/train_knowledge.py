@@ -24,14 +24,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from knowledge import features, knowledge_line  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+# same family as BERT-Tiny (Turc et al. 2019), same uncased WordPiece vocabulary, so the inputs are identical
+BASES = {"tiny": "google/bert_uncased_L-2_H-128_A-2", "mini": "google/bert_uncased_L-4_H-256_A-4",
+         "small": "google/bert_uncased_L-4_H-512_A-8", "medium": "google/bert_uncased_L-8_H-512_A-8"}
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dl", required=True)
     ap.add_argument("--seed", type=int, required=True, choices=range(42, 50))
-    ap.add_argument("--variant", required=True, choices=["control", "knowledge"])
+    ap.add_argument("--variant", required=True, help="name of this arm, e.g. control, knowledge, knowledge_mini")
+    ap.add_argument("--knowledge", type=int, choices=[0, 1], help="add the knowledge line (default: 1 unless the variant is 'control')")
+    ap.add_argument("--base", default="tiny", choices=list(BASES), help="BERT size (one knob: architecture)")
+    ap.add_argument("--epochs", type=int, default=3, help="training length (one knob)")
+    ap.add_argument("--eval-train", action="store_true", help="also score the selected checkpoint on the training set (bias vs variance)")
     a = ap.parse_args()
+    use_knowledge = a.knowledge if a.knowledge is not None else int(a.variant != "control")
     assert os.getenv("HIREMIND_MAX_LEN") == "512", "set HIREMIND_MAX_LEN=512"
     sys.path.insert(0, str(Path(a.dl).resolve() / "src"))
     from transformers import AutoTokenizer
@@ -41,25 +49,38 @@ def main():
 
     cfg = load_config(Path(a.dl) / "configs" / "experiment.json")
     assert cfg["tokenization"]["max_len"] == 512
+    if a.base != "tiny":
+        from huggingface_hub import model_info
+        cfg["student"] = {"name": BASES[a.base], "revision": model_info(BASES[a.base]).sha}  # pinned and recorded
+    batches = -(-cfg["dataset"]["rows"]["train"] // cfg["training"]["batch"])
+    cfg["training"]["epochs"], cfg["training"]["updates"] = a.epochs, a.epochs * batches
     raw = {"train": read_raw(download_raw(cfg, "train"))}  # test file is never downloaded
     man = load_manifest(cfg)
     tok = AutoTokenizer.from_pretrained(cfg["student"]["name"], revision=cfg["student"]["revision"])
     ds = {}
     for part in ("train", "validation"):
         d = split_frame(raw, man, part, cfg["dataset"]["rows"][part])
-        if a.variant == "knowledge":
+        if use_knowledge:
             d["job_description_text"] = [knowledge_line(features(cv, job)) + "\n" + job
                                          for cv, job in zip(d.resume_text, d.job_description_text)]
         ds[part] = as_dataset(tokenize(d, tok, 512))
     torch.set_num_threads(os.cpu_count() or 4)
-    info, _ = train_run("M0", cfg["selected"]["M0"]["lr"], a.seed, cfg, ds["train"], ds["validation"], "cpu")
+    info, best_state = train_run("M0", cfg["selected"]["M0"]["lr"], a.seed, cfg, ds["train"], ds["validation"], "cpu")
     b = info["best"]
-    out = {"variant": a.variant, "seed": a.seed, "best_step": b["step"], "updates": info["updates"],
+    out = {"variant": a.variant, "seed": a.seed, "knowledge": use_knowledge, "base": cfg["student"],
+           "epochs": a.epochs, "best_step": b["step"], "updates": info["updates"],
            "seconds": round(info["seconds"]), "accuracy": b["accuracy"], "macro_f1": b["macro_f1"],
            "good_fit_recall": b["good_fit_recall"],
            "good_fit_precision": 100 * b["per_class"]["Good Fit"]["precision"],
            "potential_fit_recall": 100 * b["per_class"]["Potential Fit"]["recall"],
            "confusion": b["confusion"], "history": info["history"]}
+    if a.eval_train:
+        from hiremind_dl.evaluation import evaluate
+        from hiremind_dl.models import build_model
+        m = build_model("M0", cfg, a.seed)
+        m.load_state_dict(best_state)
+        t, _, _ = evaluate(m, ds["train"], "cpu", 64)
+        out.update(train_accuracy=t["accuracy"], train_macro_f1=t["macro_f1"], train_good_fit_recall=t["good_fit_recall"])
     res = ROOT / "test-results"
     res.mkdir(exist_ok=True)
     (res / f"knowledge_run_{a.variant}_s{a.seed}.json").write_text(json.dumps(out, indent=2))

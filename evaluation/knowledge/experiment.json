@@ -1,0 +1,9 @@
+{
+  "name": "diagnose: bias or variance (Orthogonalization, CS4085 Chapter 4)",
+  "reference": "control",
+  "arms": {
+    "control": "--knowledge 0 --eval-train",
+    "knowledge": "--knowledge 1 --eval-train"
+  },
+  "seeds": [42, 43, 44]
+}
