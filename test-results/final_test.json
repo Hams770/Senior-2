@@ -1,0 +1,93 @@
+{
+  "test_pairs": 1759,
+  "good_fit_pairs": 458,
+  "models": {
+    "M0-256 seed 42 (platform today)": {
+      "sha256": "6ac7862edea03cba6c9f7854c45f7c7fc470b0c54518ebb8791f571f08997d71",
+      "max_len": 256,
+      "accuracy": 46.333143831722566,
+      "macro_f1": 37.892486687401004,
+      "good_fit_recall": 15.065502183406112,
+      "good_fit_precision": 19.942196531791907,
+      "confusion": [
+        [
+          620,
+          87,
+          150
+        ],
+        [
+          191,
+          126,
+          127
+        ],
+        [
+          276,
+          113,
+          69
+        ]
+      ],
+      "review_threshold": 0.225,
+      "review_pct": 37.97612279704378,
+      "good_fit_reaching_hr_pct": 35.37117903930131,
+      "good_fit_among_flagged_pct": 24.251497005988025
+    },
+    "M0-512 seed 42 (Mervat)": {
+      "sha256": "dcae9c17d21b2b8e3d9f4d687d19980ee8cce45e40f508ff328ee3a4454e0a0f",
+      "max_len": 512,
+      "accuracy": 48.038658328595794,
+      "macro_f1": 41.333072550582806,
+      "good_fit_recall": 34.27947598253275,
+      "good_fit_precision": 32.914046121593294,
+      "confusion": [
+        [
+          591,
+          96,
+          170
+        ],
+        [
+          197,
+          97,
+          150
+        ],
+        [
+          161,
+          140,
+          157
+        ]
+      ],
+      "review_threshold": 0.25,
+      "review_pct": 46.04889141557703,
+      "good_fit_reaching_hr_pct": 62.227074235807855,
+      "good_fit_among_flagged_pct": 35.18518518518518
+    },
+    "M0-512 + knowledge seed 42 (final)": {
+      "sha256": "cdd6b38503d708ecb9acd8a4be387893367013675e445b1693c56f9a6ada4d8b",
+      "max_len": 512,
+      "accuracy": 49.28936895963616,
+      "macro_f1": 43.2117274108897,
+      "good_fit_recall": 39.082969432314414,
+      "good_fit_precision": 35.23622047244094,
+      "confusion": [
+        [
+          584,
+          103,
+          170
+        ],
+        [
+          181,
+          104,
+          159
+        ],
+        [
+          193,
+          86,
+          179
+        ]
+      ],
+      "review_threshold": 0.25,
+      "review_pct": 39.397384877771465,
+      "good_fit_reaching_hr_pct": 52.40174672489083,
+      "good_fit_among_flagged_pct": 34.63203463203463
+    }
+  }
+}
