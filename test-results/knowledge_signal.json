@@ -1,0 +1,99 @@
+{
+  "rows": {
+    "train": 4993,
+    "validation": 1162
+  },
+  "coverage": {
+    "jobs_with_a_recognised_skill_pct": 94.75265371520129,
+    "pairs_with_years_on_both_sides_pct": 32.02483476867614,
+    "knowledge_line_words_median": 16.0
+  },
+  "means_by_label_train": {
+    "match_ratio": {
+      "No Fit": 0.22662559868716245,
+      "Potential Fit": 0.38919025575845506,
+      "Good Fit": 0.29941618894437
+    },
+    "n_found": {
+      "No Fit": 0.9139360442163442,
+      "Potential Fit": 1.1714053614947197,
+      "Good Fit": 1.517493897477624
+    },
+    "n_missing": {
+      "No Fit": 3.356494275562574,
+      "Potential Fit": 2.6645004061738424,
+      "Good Fit": 3.7615947925142392
+    },
+    "meets_years": {
+      "No Fit": 0.5709046454767727,
+      "Potential Fit": 0.6694214876033058,
+      "Good Fit": 0.5598086124401914
+    },
+    "word_overlap": {
+      "No Fit": 0.1522867651884772,
+      "Potential Fit": 0.17376929211390232,
+      "Good Fit": 0.18144001236861745
+    },
+    "tfidf_cosine": {
+      "No Fit": 0.04931885266775938,
+      "Potential Fit": 0.06142641208265872,
+      "Good Fit": 0.06661476297509214
+    },
+    "cv_words": {
+      "No Fit": 703.0769838136597,
+      "Potential Fit": 705.6246953696182,
+      "Good Fit": 710.5956061838893
+    }
+  },
+  "auc_good_vs_potential_train": {
+    "match_ratio": 0.45693565796527064,
+    "n_found": 0.5471574771349574,
+    "n_missing": 0.6221324093677105,
+    "meets_years": 0.4738832532773173,
+    "word_overlap": 0.5366746226945751,
+    "tfidf_cosine": 0.5572559701605989,
+    "cv_words": 0.511291897211909
+  },
+  "auc_good_vs_no_train": {
+    "match_ratio": 0.5968612203374368,
+    "n_found": 0.6222137917808765,
+    "n_missing": 0.5472326719362992,
+    "meets_years": 0.4944278244824942,
+    "word_overlap": 0.6230661693634264,
+    "tfidf_cosine": 0.66994757885898,
+    "cv_words": 0.5159067116342553
+  },
+  "features_only_model_validation": {
+    "accuracy": 50.25817555938038,
+    "macro_f1": 34.4906787202851,
+    "good_fit_recall": 15.916955017301039,
+    "confusion": [
+      [
+        512,
+        35,
+        32
+      ],
+      [
+        239,
+        26,
+        29
+      ],
+      [
+        181,
+        62,
+        46
+      ]
+    ]
+  },
+  "decision": {
+    "best_good_vs_potential_auc": 0.6221324093677105,
+    "continue_to_training": true
+  },
+  "example_lines": [
+    "Skills check: 2 of 4 required skills found; found: accounting, excel; missing: leadership, sql.",
+    "Skills check: 0 of 4 required skills found; found: none; missing: c#, c++, cybersecurity, python.",
+    "Skills check: 0 of 3 required skills found; found: none; missing: .net, c#, git; experience 5 years, job asks 5.",
+    "Skills check: 0 of 1 required skills found; found: none; missing: agile.",
+    "Skills check: 0 of 1 required skills found; found: none; missing: accounting."
+  ]
+}
