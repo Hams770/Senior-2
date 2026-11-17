@@ -10,6 +10,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 from app.skills import CONTEXT_ONLY, SKILLS  # noqa: E402
+import os  # noqa: E402
+
+if os.getenv("HIREMIND_KNOWLEDGE", "v1") == "v2":  # knowledge v2 adds the non-technical domains
+    from skills_v2 import EXTRA  # noqa: E402
+    SKILLS = {**SKILLS, **{k: v for k, v in EXTRA.items() if k not in SKILLS}}
 
 _BOUND_L, _BOUND_R = r"(?<![\w+#.])", r"(?![\w+#])"
 # plain dataset text has no sections, so the ambiguous spellings (go, swift, sales, ml, …) are not used
@@ -43,10 +48,11 @@ def knowledge_line(f: dict) -> str:
     """The text added in front of the job description (step 3)."""
     if not f["n_job_skills"]:
         return "Skills check: no listed skills recognised."
+    cap = 12 if os.getenv("HIREMIND_KNOWLEDGE", "v1") == "v2" else None  # keep the line short when jobs list many skills
     parts = [f"Skills check: {f['n_found']} of {f['n_job_skills']} required skills found",
-             "found: " + ", ".join(f["found"]) if f["found"] else "found: none"]
+             "found: " + ", ".join(f["found"][:cap]) if f["found"] else "found: none"]
     if f["missing"]:
-        parts.append("missing: " + ", ".join(f["missing"]))
+        parts.append("missing: " + ", ".join(f["missing"][:cap]))
     if f["meets_years"] is not None:
         parts.append(f"experience {f['cv_years']} years, job asks {f['job_years']}")
     return "; ".join(parts) + "."

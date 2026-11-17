@@ -20,6 +20,8 @@ from pathlib import Path
 
 import torch
 
+if "--vocab" in sys.argv:  # must be set before knowledge.py is imported
+    os.environ["HIREMIND_KNOWLEDGE"] = sys.argv[sys.argv.index("--vocab") + 1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from knowledge import features, knowledge_line  # noqa: E402
 
@@ -41,6 +43,7 @@ def main():
     ap.add_argument("--save-weights", help="folder to save the selected checkpoint (weights.pt + info.json)")
     ap.add_argument("--save-preds", action="store_true", help="write per-pair validation predictions (error analysis)")
     ap.add_argument("--eval-train", action="store_true", help="also score the selected checkpoint on the training set (bias vs variance)")
+    ap.add_argument("--vocab", default="v1", choices=["v1", "v2"], help="knowledge vocabulary (v2 adds non-technical domains)")
     a = ap.parse_args()
     use_knowledge = a.knowledge if a.knowledge is not None else int(a.variant != "control")
     assert os.getenv("HIREMIND_MAX_LEN") == "512", "set HIREMIND_MAX_LEN=512"
@@ -73,7 +76,7 @@ def main():
         torch.set_num_threads(os.cpu_count() or 4)
     info, best_state = train_run("M0", cfg["selected"]["M0"]["lr"], a.seed, cfg, ds["train"], ds["validation"], dev)
     b = info["best"]
-    out = {"variant": a.variant, "seed": a.seed, "knowledge": use_knowledge, "base": cfg["student"],
+    out = {"variant": a.variant, "seed": a.seed, "knowledge": use_knowledge, "vocab": os.getenv("HIREMIND_KNOWLEDGE", "v1"), "base": cfg["student"],
            "epochs": a.epochs, "device": dev, "best_step": b["step"], "updates": info["updates"],
            "seconds": round(info["seconds"]), "accuracy": b["accuracy"], "macro_f1": b["macro_f1"],
            "good_fit_recall": b["good_fit_recall"],

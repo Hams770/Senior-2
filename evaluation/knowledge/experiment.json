@@ -1,8 +1,9 @@
 {
-  "name": "error analysis run: knowledge model with per-pair validation predictions",
+  "name": "knowledge v2 (non-technical domains added to the vocabulary) vs knowledge v1; 8 seeds, same pre-set criteria",
   "reference": "knowledge",
   "arms": {
-    "knowledge": "--knowledge 1 --save-preds"
+    "knowledge": "--knowledge 1",
+    "knowledge_v2": "--knowledge 1 --vocab v2 --save-preds"
   },
   "seeds": [42, 43, 44, 45, 46, 47, 48, 49]
 }
